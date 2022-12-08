@@ -1,0 +1,66 @@
+{
+  "applications": "*",
+  "changelogDate": "20221205182320",
+  "dto": "no",
+  "embedded": false,
+  "entityTableName": "annonce",
+  "fields": [
+    {
+      "fieldName": "description",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "heureDebut",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "heureFin",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "duree",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "validation",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "nombreParEquipe",
+      "fieldType": "Integer"
+    },
+    {
+      "fieldName": "status",
+      "fieldType": "STATUS",
+      "fieldValues": "OUVERT,FEREME,ENCOURS"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "Annonce",
+  "pagination": "no",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "terrain",
+      "otherEntityRelationshipName": "annonce",
+      "ownerSide": true,
+      "relationshipName": "terrain",
+      "relationshipType": "one-to-one"
+    },
+    {
+      "otherEntityName": "equipe",
+      "otherEntityRelationshipName": "annonce",
+      "ownerSide": false,
+      "relationshipName": "equipe",
+      "relationshipType": "one-to-one"
+    },
+    {
+      "otherEntityName": "joueur",
+      "otherEntityRelationshipName": "annonces",
+      "relationshipName": "responsable",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "no"
+}

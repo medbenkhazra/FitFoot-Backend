@@ -1,0 +1,25 @@
+{
+  "fitFootApp": {
+    "equipe": {
+      "home": {
+        "title": "Equipes",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Equipe",
+        "createOrEditLabel": "Create or edit a Equipe",
+        "notFound": "No Equipes found"
+      },
+      "created": "A new Equipe is created with identifier {{ param }}",
+      "updated": "A Equipe is updated with identifier {{ param }}",
+      "deleted": "A Equipe is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Equipe {{ id }}?"
+      },
+      "detail": {
+        "title": "Equipe"
+      },
+      "id": "ID",
+      "annonce": "Annonce",
+      "joueur": "Joueur"
+    }
+  }
+}

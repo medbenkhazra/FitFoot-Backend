@@ -1,0 +1,39 @@
+{
+  "applications": "*",
+  "changelogDate": "20221205182322",
+  "dto": "no",
+  "embedded": false,
+  "entityTableName": "quartier",
+  "fields": [
+    {
+      "fieldName": "nom",
+      "fieldType": "String"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "Quartier",
+  "pagination": "no",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "joueur",
+      "otherEntityRelationshipName": "quartier",
+      "relationshipName": "joueur",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "complexe",
+      "otherEntityRelationshipName": "quartier",
+      "relationshipName": "complexe",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "ville",
+      "otherEntityRelationshipName": "quartier",
+      "relationshipName": "ville",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "no"
+}

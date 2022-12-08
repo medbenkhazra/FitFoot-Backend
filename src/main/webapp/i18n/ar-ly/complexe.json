@@ -1,0 +1,29 @@
+{
+  "fitFootApp": {
+    "complexe": {
+      "home": {
+        "title": "Complexes",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Complexe",
+        "createOrEditLabel": "Create or edit a Complexe",
+        "notFound": "No Complexes found"
+      },
+      "created": "A new Complexe is created with identifier {{ param }}",
+      "updated": "A Complexe is updated with identifier {{ param }}",
+      "deleted": "A Complexe is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Complexe {{ id }}?"
+      },
+      "detail": {
+        "title": "Complexe"
+      },
+      "id": "ID",
+      "nom": "Nom",
+      "longitude": "Longitude",
+      "latitude": "Latitude",
+      "terrain": "Terrain",
+      "quartier": "Quartier",
+      "proprietaire": "Proprietaire"
+    }
+  }
+}

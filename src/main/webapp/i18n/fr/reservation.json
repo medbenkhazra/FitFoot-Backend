@@ -1,0 +1,27 @@
+{
+  "fitFootApp": {
+    "reservation": {
+      "home": {
+        "title": "Reservations",
+        "refreshListLabel": "Actualiser la liste",
+        "createLabel": "Créer un nouveau Reservation",
+        "createOrEditLabel": "Créer ou éditer un Reservation",
+        "notFound": "Aucun Reservation trouvé"
+      },
+      "created": "Un nouveau Reservation a été créé avec l'identifiant {{ param }}",
+      "updated": "Le Reservation avec l'identifiant {{ param }} a été mis à jour",
+      "deleted": "Le Reservation avec l'identifiant {{ param }} a été supprimé",
+      "delete": {
+        "question": "Êtes-vous certain de vouloir supprimer le Reservation {{ id }} ?"
+      },
+      "detail": {
+        "title": "Reservation"
+      },
+      "id": "ID",
+      "date": "Date",
+      "heureDebut": "Heure Debut",
+      "heureFin": "Heure Fin",
+      "terrain": "Terrain"
+    }
+  }
+}

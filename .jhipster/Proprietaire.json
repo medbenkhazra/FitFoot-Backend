@@ -1,0 +1,46 @@
+{
+  "applications": "*",
+  "changelogDate": "20221205182321",
+  "dto": "no",
+  "embedded": false,
+  "entityTableName": "proprietaire",
+  "fields": [
+    {
+      "fieldName": "avatar",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "image"
+    },
+    {
+      "fieldName": "cin",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "rib",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "numTel",
+      "fieldType": "String"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "Proprietaire",
+  "pagination": "no",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "user",
+      "ownerSide": true,
+      "relationshipName": "user",
+      "relationshipType": "one-to-one"
+    },
+    {
+      "otherEntityName": "complexe",
+      "otherEntityRelationshipName": "proprietaire",
+      "relationshipName": "complexe",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "service": "no"
+}

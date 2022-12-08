@@ -1,0 +1,42 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="terrain">
+      <h2 data-cy="terrainDetailsHeading"><span jhiTranslate="fitFootApp.terrain.detail.title">Terrain</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ terrain.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.terrain.nom">Nom</span></dt>
+        <dd>
+          <span>{{ terrain.nom }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.terrain.capaciteParEquipe">Capacite Par Equipe</span></dt>
+        <dd>
+          <span>{{ terrain.capaciteParEquipe }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.terrain.complexe">Complexe</span></dt>
+        <dd>
+          <div *ngIf="terrain.complexe">
+            <a [routerLink]="['/complexe', terrain.complexe.id, 'view']">{{ terrain.complexe.id }}</a>
+          </div>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+      </button>
+
+      <button type="button" [routerLink]="['/terrain', terrain.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

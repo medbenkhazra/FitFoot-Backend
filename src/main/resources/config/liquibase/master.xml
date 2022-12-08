@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <property name="now" value="now()" dbms="mysql"/>
+    <property name="floatType" value="float" dbms="mysql"/>
+    <property name="clobType" value="clob" dbms="mysql"/>
+    <property name="blobType" value="longblob" dbms="mysql"/>
+    <property name="uuidType" value="varchar(36)" dbms="mysql"/>
+    <property name="datetimeType" value="datetime(6)" dbms="mysql"/>
+
+    <include file="config/liquibase/changelog/00000000000000_initial_schema.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182318_added_entity_Joueur.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182319_added_entity_Equipe.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182320_added_entity_Annonce.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182321_added_entity_Proprietaire.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182322_added_entity_Quartier.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182323_added_entity_Complexe.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182324_added_entity_Terrain.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182325_added_entity_Ville.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182326_added_entity_Reservation.xml" relativeToChangelogFile="false"/>
+    <!-- jhipster-needle-liquibase-add-changelog - JHipster will add liquibase changelogs here -->
+    <include file="config/liquibase/changelog/20221205182318_added_entity_constraints_Joueur.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182319_added_entity_constraints_Equipe.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182320_added_entity_constraints_Annonce.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182321_added_entity_constraints_Proprietaire.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182322_added_entity_constraints_Quartier.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182323_added_entity_constraints_Complexe.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182324_added_entity_constraints_Terrain.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20221205182326_added_entity_constraints_Reservation.xml" relativeToChangelogFile="false"/>
+    <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
+    <!-- jhipster-needle-liquibase-add-incremental-changelog - JHipster will add incremental liquibase changelogs here -->
+</databaseChangeLog>

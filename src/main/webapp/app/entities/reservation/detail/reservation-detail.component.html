@@ -1,0 +1,46 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="reservation">
+      <h2 data-cy="reservationDetailsHeading"><span jhiTranslate="fitFootApp.reservation.detail.title">Reservation</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ reservation.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.reservation.date">Date</span></dt>
+        <dd>
+          <span>{{ reservation.date | formatMediumDate }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.reservation.heureDebut">Heure Debut</span></dt>
+        <dd>
+          <span>{{ reservation.heureDebut | formatMediumDatetime }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.reservation.heureFin">Heure Fin</span></dt>
+        <dd>
+          <span>{{ reservation.heureFin | formatMediumDatetime }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.reservation.terrain">Terrain</span></dt>
+        <dd>
+          <div *ngIf="reservation.terrain">
+            <a [routerLink]="['/terrain', reservation.terrain.id, 'view']">{{ reservation.terrain.id }}</a>
+          </div>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+      </button>
+
+      <button type="button" [routerLink]="['/reservation', reservation.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

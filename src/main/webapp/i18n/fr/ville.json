@@ -1,0 +1,25 @@
+{
+  "fitFootApp": {
+    "ville": {
+      "home": {
+        "title": "Villes",
+        "refreshListLabel": "Actualiser la liste",
+        "createLabel": "Créer un nouveau Ville",
+        "createOrEditLabel": "Créer ou éditer un Ville",
+        "notFound": "Aucun Ville trouvé"
+      },
+      "created": "Un nouveau Ville a été créé avec l'identifiant {{ param }}",
+      "updated": "Le Ville avec l'identifiant {{ param }} a été mis à jour",
+      "deleted": "Le Ville avec l'identifiant {{ param }} a été supprimé",
+      "delete": {
+        "question": "Êtes-vous certain de vouloir supprimer le Ville {{ id }} ?"
+      },
+      "detail": {
+        "title": "Ville"
+      },
+      "id": "ID",
+      "nom": "Nom",
+      "quartier": "Quartier"
+    }
+  }
+}

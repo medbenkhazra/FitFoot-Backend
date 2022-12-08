@@ -1,0 +1,44 @@
+{
+  "applications": "*",
+  "changelogDate": "20221205182324",
+  "dto": "no",
+  "embedded": false,
+  "entityTableName": "terrain",
+  "fields": [
+    {
+      "fieldName": "nom",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "capaciteParEquipe",
+      "fieldType": "Integer"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "Terrain",
+  "pagination": "no",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "reservation",
+      "otherEntityRelationshipName": "terrain",
+      "relationshipName": "reservation",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "annonce",
+      "otherEntityRelationshipName": "terrain",
+      "ownerSide": false,
+      "relationshipName": "annonce",
+      "relationshipType": "one-to-one"
+    },
+    {
+      "otherEntityName": "complexe",
+      "otherEntityRelationshipName": "terrain",
+      "relationshipName": "complexe",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "no"
+}

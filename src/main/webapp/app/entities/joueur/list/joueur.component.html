@@ -1,0 +1,129 @@
+<div>
+  <h2 id="page-heading" data-cy="JoueurHeading">
+    <span jhiTranslate="fitFootApp.joueur.home.title">Joueurs</span>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="load()" [disabled]="isLoading">
+        <fa-icon icon="sync" [spin]="isLoading"></fa-icon>
+        <span jhiTranslate="fitFootApp.joueur.home.refreshListLabel">Refresh list</span>
+      </button>
+
+      <button
+        id="jh-create-entity"
+        data-cy="entityCreateButton"
+        class="btn btn-primary jh-create-entity create-joueur"
+        [routerLink]="['/joueur/new']"
+      >
+        <fa-icon icon="plus"></fa-icon>
+        <span jhiTranslate="fitFootApp.joueur.home.createLabel"> Create a new Joueur </span>
+      </button>
+    </div>
+  </h2>
+
+  <jhi-alert-error></jhi-alert-error>
+
+  <jhi-alert></jhi-alert>
+
+  <div class="alert alert-warning" id="no-result" *ngIf="joueurs?.length === 0">
+    <span jhiTranslate="fitFootApp.joueur.home.notFound">No Joueurs found</span>
+  </div>
+
+  <div class="table-responsive table-entities" id="entities" *ngIf="joueurs && joueurs.length > 0">
+    <table class="table table-striped" aria-describedby="page-heading">
+      <thead>
+        <tr jhiSort [(predicate)]="predicate" [(ascending)]="ascending" (sortChange)="navigateToWithComponentValues()">
+          <th scope="col" jhiSortBy="id">
+            <div class="d-flex">
+              <span jhiTranslate="global.field.id">ID</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="birthDay">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.joueur.birthDay">Birth Day</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="gender">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.joueur.gender">Gender</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="avatar">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.joueur.avatar">Avatar</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="user.id">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.joueur.user">User</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="equipe.id">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.joueur.equipe">Equipe</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="quartier.id">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.joueur.quartier">Quartier</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let joueur of joueurs; trackBy: trackId" data-cy="entityTable">
+          <td>
+            <a [routerLink]="['/joueur', joueur.id, 'view']">{{ joueur.id }}</a>
+          </td>
+          <td>{{ joueur.birthDay | formatMediumDate }}</td>
+          <td jhiTranslate="{{ 'fitFootApp.GENDER.' + joueur.gender }}">{{ joueur.gender }}</td>
+          <td>
+            <a *ngIf="joueur.avatar" (click)="openFile(joueur.avatar, joueur.avatarContentType)">
+              <img [src]="'data:' + joueur.avatarContentType + ';base64,' + joueur.avatar" style="max-height: 30px" alt="joueur image" />
+            </a>
+            <span *ngIf="joueur.avatar">{{ joueur.avatarContentType }}, {{ byteSize(joueur.avatar) }}</span>
+          </td>
+          <td>
+            {{ joueur.user?.id }}
+          </td>
+          <td>
+            <span *ngFor="let equipe of joueur.equipes; let last = last">
+              <a class="form-control-static" [routerLink]="['/equipe', equipe.id, 'view']">{{ equipe.id }}</a
+              >{{ last ? '' : ', ' }}
+            </span>
+          </td>
+          <td>
+            <div *ngIf="joueur.quartier">
+              <a [routerLink]="['/quartier', joueur.quartier.id, 'view']">{{ joueur.quartier.id }}</a>
+            </div>
+          </td>
+          <td class="text-end">
+            <div class="btn-group">
+              <button type="submit" [routerLink]="['/joueur', joueur.id, 'view']" class="btn btn-info btn-sm" data-cy="entityDetailsButton">
+                <fa-icon icon="eye"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.view">View</span>
+              </button>
+
+              <button type="submit" [routerLink]="['/joueur', joueur.id, 'edit']" class="btn btn-primary btn-sm" data-cy="entityEditButton">
+                <fa-icon icon="pencil-alt"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.edit">Edit</span>
+              </button>
+
+              <button type="submit" (click)="delete(joueur)" class="btn btn-danger btn-sm" data-cy="entityDeleteButton">
+                <fa-icon icon="times"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.delete">Delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

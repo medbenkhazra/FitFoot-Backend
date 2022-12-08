@@ -1,0 +1,28 @@
+{
+  "fitFootApp": {
+    "terrain": {
+      "home": {
+        "title": "Terrains",
+        "refreshListLabel": "Actualiser la liste",
+        "createLabel": "Créer un nouveau Terrain",
+        "createOrEditLabel": "Créer ou éditer un Terrain",
+        "notFound": "Aucun Terrain trouvé"
+      },
+      "created": "Un nouveau Terrain a été créé avec l'identifiant {{ param }}",
+      "updated": "Le Terrain avec l'identifiant {{ param }} a été mis à jour",
+      "deleted": "Le Terrain avec l'identifiant {{ param }} a été supprimé",
+      "delete": {
+        "question": "Êtes-vous certain de vouloir supprimer le Terrain {{ id }} ?"
+      },
+      "detail": {
+        "title": "Terrain"
+      },
+      "id": "ID",
+      "nom": "Nom",
+      "capaciteParEquipe": "Capacite Par Equipe",
+      "reservation": "Reservation",
+      "annonce": "Annonce",
+      "complexe": "Complexe"
+    }
+  }
+}

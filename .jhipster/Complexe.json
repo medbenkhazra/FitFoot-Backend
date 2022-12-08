@@ -1,0 +1,47 @@
+{
+  "applications": "*",
+  "changelogDate": "20221205182323",
+  "dto": "no",
+  "embedded": false,
+  "entityTableName": "complexe",
+  "fields": [
+    {
+      "fieldName": "nom",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "longitude",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "latitude",
+      "fieldType": "Double"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "Complexe",
+  "pagination": "no",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "terrain",
+      "otherEntityRelationshipName": "complexe",
+      "relationshipName": "terrain",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "quartier",
+      "otherEntityRelationshipName": "complexe",
+      "relationshipName": "quartier",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityName": "proprietaire",
+      "otherEntityRelationshipName": "complexe",
+      "relationshipName": "proprietaire",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "no"
+}

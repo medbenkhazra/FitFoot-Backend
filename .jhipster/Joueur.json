@@ -1,0 +1,56 @@
+{
+  "applications": "*",
+  "changelogDate": "20221205182318",
+  "dto": "no",
+  "embedded": false,
+  "entityTableName": "joueur",
+  "fields": [
+    {
+      "fieldName": "birthDay",
+      "fieldType": "LocalDate"
+    },
+    {
+      "fieldName": "gender",
+      "fieldType": "GENDER",
+      "fieldValues": "MALE,FEMALE"
+    },
+    {
+      "fieldName": "avatar",
+      "fieldType": "byte[]",
+      "fieldTypeBlobContent": "image"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "Joueur",
+  "pagination": "no",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "user",
+      "ownerSide": true,
+      "relationshipName": "user",
+      "relationshipType": "one-to-one"
+    },
+    {
+      "otherEntityName": "annonce",
+      "otherEntityRelationshipName": "responsable",
+      "relationshipName": "annonces",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "equipe",
+      "otherEntityRelationshipName": "joueur",
+      "ownerSide": true,
+      "relationshipName": "equipe",
+      "relationshipType": "many-to-many"
+    },
+    {
+      "otherEntityName": "quartier",
+      "otherEntityRelationshipName": "joueur",
+      "relationshipName": "quartier",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "service": "no"
+}

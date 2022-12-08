@@ -1,0 +1,135 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" role="form" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-joueur-heading" data-cy="JoueurCreateUpdateHeading" jhiTranslate="fitFootApp.joueur.home.createOrEditLabel">
+        Create or edit a Joueur
+      </h2>
+
+      <div>
+        <jhi-alert-error></jhi-alert-error>
+
+        <div class="row mb-3" *ngIf="editForm.controls.id.value !== null">
+          <label class="form-label" jhiTranslate="global.field.id" for="field_id">ID</label>
+          <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.joueur.birthDay" for="field_birthDay">Birth Day</label>
+          <div class="input-group">
+            <input
+              id="field_birthDay"
+              data-cy="birthDay"
+              type="text"
+              class="form-control"
+              name="birthDay"
+              ngbDatepicker
+              #birthDayDp="ngbDatepicker"
+              formControlName="birthDay"
+            />
+            <button type="button" class="btn btn-secondary" (click)="birthDayDp.toggle()"><fa-icon icon="calendar-alt"></fa-icon></button>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.joueur.gender" for="field_gender">Gender</label>
+          <select class="form-control" name="gender" formControlName="gender" id="field_gender" data-cy="gender">
+            <option [ngValue]="null">{{ 'fitFootApp.GENDER.null' | translate }}</option>
+            <option *ngFor="let gENDER of gENDERValues" [value]="gENDER">{{ 'fitFootApp.GENDER.' + gENDER | translate }}</option>
+          </select>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.joueur.avatar" for="field_avatar">Avatar</label>
+          <div>
+            <img
+              [src]="'data:' + editForm.get('avatarContentType')!.value + ';base64,' + editForm.get('avatar')!.value"
+              style="max-height: 100px"
+              *ngIf="editForm.get('avatar')!.value"
+              alt="joueur image"
+            />
+            <div *ngIf="editForm.get('avatar')!.value" class="form-text text-danger clearfix">
+              <span class="pull-start">{{ editForm.get('avatarContentType')!.value }}, {{ byteSize(editForm.get('avatar')!.value!) }}</span>
+              <button
+                type="button"
+                (click)="clearInputImage('avatar', 'avatarContentType', 'file_avatar')"
+                class="btn btn-secondary btn-xs pull-end"
+              >
+                <fa-icon icon="times"></fa-icon>
+              </button>
+            </div>
+            <input
+              type="file"
+              id="file_avatar"
+              data-cy="avatar"
+              (change)="setFileData($event, 'avatar', true)"
+              accept="image/*"
+              jhiTranslate="entity.action.addimage"
+            />
+          </div>
+          <input type="hidden" class="form-control" name="avatar" id="field_avatar" data-cy="avatar" formControlName="avatar" />
+          <input
+            type="hidden"
+            class="form-control"
+            name="avatarContentType"
+            id="field_avatarContentType"
+            formControlName="avatarContentType"
+          />
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.joueur.user" for="field_user">User</label>
+          <select class="form-control" id="field_user" data-cy="user" name="user" formControlName="user" [compareWith]="compareUser">
+            <option [ngValue]="null"></option>
+            <option [ngValue]="userOption" *ngFor="let userOption of usersSharedCollection">{{ userOption.id }}</option>
+          </select>
+        </div>
+
+        <div class="row mb-3">
+          <label jhiTranslate="fitFootApp.joueur.equipe" for="field_equipes">Equipe</label>
+          <select
+            class="form-control"
+            id="field_equipes"
+            data-cy="equipe"
+            multiple
+            name="equipes"
+            formControlName="equipes"
+            [compareWith]="compareEquipe"
+          >
+            <option [ngValue]="equipeOption" *ngFor="let equipeOption of equipesSharedCollection">{{ equipeOption.id }}</option>
+          </select>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.joueur.quartier" for="field_quartier">Quartier</label>
+          <select
+            class="form-control"
+            id="field_quartier"
+            data-cy="quartier"
+            name="quartier"
+            formControlName="quartier"
+            [compareWith]="compareQuartier"
+          >
+            <option [ngValue]="null"></option>
+            <option [ngValue]="quartierOption" *ngFor="let quartierOption of quartiersSharedCollection">{{ quartierOption.id }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

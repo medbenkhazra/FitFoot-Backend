@@ -1,0 +1,143 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <form name="editForm" role="form" novalidate (ngSubmit)="save()" [formGroup]="editForm">
+      <h2 id="jhi-annonce-heading" data-cy="AnnonceCreateUpdateHeading" jhiTranslate="fitFootApp.annonce.home.createOrEditLabel">
+        Create or edit a Annonce
+      </h2>
+
+      <div>
+        <jhi-alert-error></jhi-alert-error>
+
+        <div class="row mb-3" *ngIf="editForm.controls.id.value !== null">
+          <label class="form-label" jhiTranslate="global.field.id" for="field_id">ID</label>
+          <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.annonce.description" for="field_description">Description</label>
+          <input
+            type="text"
+            class="form-control"
+            name="description"
+            id="field_description"
+            data-cy="description"
+            formControlName="description"
+          />
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.annonce.heureDebut" for="field_heureDebut">Heure Debut</label>
+          <div class="d-flex">
+            <input
+              id="field_heureDebut"
+              data-cy="heureDebut"
+              type="datetime-local"
+              class="form-control"
+              name="heureDebut"
+              formControlName="heureDebut"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.annonce.heureFin" for="field_heureFin">Heure Fin</label>
+          <div class="d-flex">
+            <input
+              id="field_heureFin"
+              data-cy="heureFin"
+              type="datetime-local"
+              class="form-control"
+              name="heureFin"
+              formControlName="heureFin"
+              placeholder="YYYY-MM-DD HH:mm"
+            />
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.annonce.duree" for="field_duree">Duree</label>
+          <input type="number" class="form-control" name="duree" id="field_duree" data-cy="duree" formControlName="duree" />
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.annonce.validation" for="field_validation">Validation</label>
+          <input
+            type="checkbox"
+            class="form-check"
+            name="validation"
+            id="field_validation"
+            data-cy="validation"
+            formControlName="validation"
+          />
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.annonce.nombreParEquipe" for="field_nombreParEquipe">Nombre Par Equipe</label>
+          <input
+            type="number"
+            class="form-control"
+            name="nombreParEquipe"
+            id="field_nombreParEquipe"
+            data-cy="nombreParEquipe"
+            formControlName="nombreParEquipe"
+          />
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.annonce.status" for="field_status">Status</label>
+          <select class="form-control" name="status" formControlName="status" id="field_status" data-cy="status">
+            <option [ngValue]="null">{{ 'fitFootApp.STATUS.null' | translate }}</option>
+            <option *ngFor="let sTATUS of sTATUSValues" [value]="sTATUS">{{ 'fitFootApp.STATUS.' + sTATUS | translate }}</option>
+          </select>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.annonce.terrain" for="field_terrain">Terrain</label>
+          <select
+            class="form-control"
+            id="field_terrain"
+            data-cy="terrain"
+            name="terrain"
+            formControlName="terrain"
+            [compareWith]="compareTerrain"
+          >
+            <option [ngValue]="null"></option>
+            <option [ngValue]="terrainOption" *ngFor="let terrainOption of terrainsCollection">{{ terrainOption.id }}</option>
+          </select>
+        </div>
+
+        <div class="row mb-3">
+          <label class="form-label" jhiTranslate="fitFootApp.annonce.responsable" for="field_responsable">Responsable</label>
+          <select
+            class="form-control"
+            id="field_responsable"
+            data-cy="responsable"
+            name="responsable"
+            formControlName="responsable"
+            [compareWith]="compareJoueur"
+          >
+            <option [ngValue]="null"></option>
+            <option [ngValue]="joueurOption" *ngFor="let joueurOption of joueursSharedCollection">{{ joueurOption.id }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <button type="button" id="cancel-save" data-cy="entityCreateCancelButton" class="btn btn-secondary" (click)="previousState()">
+          <fa-icon icon="ban"></fa-icon>&nbsp;<span jhiTranslate="entity.action.cancel">Cancel</span>
+        </button>
+
+        <button
+          type="submit"
+          id="save-entity"
+          data-cy="entityCreateSaveButton"
+          [disabled]="editForm.invalid || isSaving"
+          class="btn btn-primary"
+        >
+          <fa-icon icon="save"></fa-icon>&nbsp;<span jhiTranslate="entity.action.save">Save</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

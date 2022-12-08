@@ -1,0 +1,127 @@
+<div>
+  <h2 id="page-heading" data-cy="ProprietaireHeading">
+    <span jhiTranslate="fitFootApp.proprietaire.home.title">Proprietaires</span>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="load()" [disabled]="isLoading">
+        <fa-icon icon="sync" [spin]="isLoading"></fa-icon>
+        <span jhiTranslate="fitFootApp.proprietaire.home.refreshListLabel">Refresh list</span>
+      </button>
+
+      <button
+        id="jh-create-entity"
+        data-cy="entityCreateButton"
+        class="btn btn-primary jh-create-entity create-proprietaire"
+        [routerLink]="['/proprietaire/new']"
+      >
+        <fa-icon icon="plus"></fa-icon>
+        <span jhiTranslate="fitFootApp.proprietaire.home.createLabel"> Create a new Proprietaire </span>
+      </button>
+    </div>
+  </h2>
+
+  <jhi-alert-error></jhi-alert-error>
+
+  <jhi-alert></jhi-alert>
+
+  <div class="alert alert-warning" id="no-result" *ngIf="proprietaires?.length === 0">
+    <span jhiTranslate="fitFootApp.proprietaire.home.notFound">No Proprietaires found</span>
+  </div>
+
+  <div class="table-responsive table-entities" id="entities" *ngIf="proprietaires && proprietaires.length > 0">
+    <table class="table table-striped" aria-describedby="page-heading">
+      <thead>
+        <tr jhiSort [(predicate)]="predicate" [(ascending)]="ascending" (sortChange)="navigateToWithComponentValues()">
+          <th scope="col" jhiSortBy="id">
+            <div class="d-flex">
+              <span jhiTranslate="global.field.id">ID</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="avatar">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.proprietaire.avatar">Avatar</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="cin">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.proprietaire.cin">Cin</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="rib">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.proprietaire.rib">Rib</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="numTel">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.proprietaire.numTel">Num Tel</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="user.id">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.proprietaire.user">User</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let proprietaire of proprietaires; trackBy: trackId" data-cy="entityTable">
+          <td>
+            <a [routerLink]="['/proprietaire', proprietaire.id, 'view']">{{ proprietaire.id }}</a>
+          </td>
+          <td>
+            <a *ngIf="proprietaire.avatar" (click)="openFile(proprietaire.avatar, proprietaire.avatarContentType)">
+              <img
+                [src]="'data:' + proprietaire.avatarContentType + ';base64,' + proprietaire.avatar"
+                style="max-height: 30px"
+                alt="proprietaire image"
+              />
+            </a>
+            <span *ngIf="proprietaire.avatar">{{ proprietaire.avatarContentType }}, {{ byteSize(proprietaire.avatar) }}</span>
+          </td>
+          <td>{{ proprietaire.cin }}</td>
+          <td>{{ proprietaire.rib }}</td>
+          <td>{{ proprietaire.numTel }}</td>
+          <td>
+            {{ proprietaire.user?.id }}
+          </td>
+          <td class="text-end">
+            <div class="btn-group">
+              <button
+                type="submit"
+                [routerLink]="['/proprietaire', proprietaire.id, 'view']"
+                class="btn btn-info btn-sm"
+                data-cy="entityDetailsButton"
+              >
+                <fa-icon icon="eye"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.view">View</span>
+              </button>
+
+              <button
+                type="submit"
+                [routerLink]="['/proprietaire', proprietaire.id, 'edit']"
+                class="btn btn-primary btn-sm"
+                data-cy="entityEditButton"
+              >
+                <fa-icon icon="pencil-alt"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.edit">Edit</span>
+              </button>
+
+              <button type="submit" (click)="delete(proprietaire)" class="btn btn-danger btn-sm" data-cy="entityDeleteButton">
+                <fa-icon icon="times"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.delete">Delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+{
+  "fitFootApp": {
+    "STATUS": {
+      "null": "",
+      "OUVERT": "OUVERT",
+      "FEREME": "FEREME",
+      "ENCOURS": "ENCOURS"
+    }
+  }
+}

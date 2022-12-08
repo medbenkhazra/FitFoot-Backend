@@ -1,0 +1,52 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="complexe">
+      <h2 data-cy="complexeDetailsHeading"><span jhiTranslate="fitFootApp.complexe.detail.title">Complexe</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ complexe.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.complexe.nom">Nom</span></dt>
+        <dd>
+          <span>{{ complexe.nom }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.complexe.longitude">Longitude</span></dt>
+        <dd>
+          <span>{{ complexe.longitude }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.complexe.latitude">Latitude</span></dt>
+        <dd>
+          <span>{{ complexe.latitude }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.complexe.quartier">Quartier</span></dt>
+        <dd>
+          <div *ngIf="complexe.quartier">
+            <a [routerLink]="['/quartier', complexe.quartier.id, 'view']">{{ complexe.quartier.id }}</a>
+          </div>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.complexe.proprietaire">Proprietaire</span></dt>
+        <dd>
+          <div *ngIf="complexe.proprietaire">
+            <a [routerLink]="['/proprietaire', complexe.proprietaire.id, 'view']">{{ complexe.proprietaire.id }}</a>
+          </div>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+      </button>
+
+      <button type="button" [routerLink]="['/complexe', complexe.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

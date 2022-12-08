@@ -1,0 +1,27 @@
+{
+  "fitFootApp": {
+    "quartier": {
+      "home": {
+        "title": "Quartiers",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Quartier",
+        "createOrEditLabel": "Create or edit a Quartier",
+        "notFound": "No Quartiers found"
+      },
+      "created": "A new Quartier is created with identifier {{ param }}",
+      "updated": "A Quartier is updated with identifier {{ param }}",
+      "deleted": "A Quartier is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Quartier {{ id }}?"
+      },
+      "detail": {
+        "title": "Quartier"
+      },
+      "id": "ID",
+      "nom": "Nom",
+      "joueur": "Joueur",
+      "complexe": "Complexe",
+      "ville": "Ville"
+    }
+  }
+}

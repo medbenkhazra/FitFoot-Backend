@@ -1,0 +1,62 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="joueur">
+      <h2 data-cy="joueurDetailsHeading"><span jhiTranslate="fitFootApp.joueur.detail.title">Joueur</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ joueur.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.joueur.birthDay">Birth Day</span></dt>
+        <dd>
+          <span>{{ joueur.birthDay | formatMediumDate }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.joueur.gender">Gender</span></dt>
+        <dd>
+          <span jhiTranslate="{{ 'fitFootApp.GENDER.' + joueur.gender }}">{{ joueur.gender }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.joueur.avatar">Avatar</span></dt>
+        <dd>
+          <div *ngIf="joueur.avatar">
+            <a (click)="openFile(joueur.avatar, joueur.avatarContentType)">
+              <img [src]="'data:' + joueur.avatarContentType + ';base64,' + joueur.avatar" style="max-width: 100%" alt="joueur image" />
+            </a>
+            {{ joueur.avatarContentType }}, {{ byteSize(joueur.avatar) }}
+          </div>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.joueur.user">User</span></dt>
+        <dd>
+          <span>{{ joueur.user?.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.joueur.equipe">Equipe</span></dt>
+        <dd>
+          <span *ngFor="let equipe of joueur.equipes; let last = last">
+            <a [routerLink]="['/equipe', equipe.id, 'view']">{{ equipe.id }}</a
+            >{{ last ? '' : ', ' }}
+          </span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.joueur.quartier">Quartier</span></dt>
+        <dd>
+          <div *ngIf="joueur.quartier">
+            <a [routerLink]="['/quartier', joueur.quartier.id, 'view']">{{ joueur.quartier.id }}</a>
+          </div>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+      </button>
+
+      <button type="button" [routerLink]="['/joueur', joueur.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

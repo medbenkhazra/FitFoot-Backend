@@ -1,0 +1,106 @@
+<div>
+  <h2 id="page-heading" data-cy="TerrainHeading">
+    <span jhiTranslate="fitFootApp.terrain.home.title">Terrains</span>
+
+    <div class="d-flex justify-content-end">
+      <button class="btn btn-info me-2" (click)="load()" [disabled]="isLoading">
+        <fa-icon icon="sync" [spin]="isLoading"></fa-icon>
+        <span jhiTranslate="fitFootApp.terrain.home.refreshListLabel">Refresh list</span>
+      </button>
+
+      <button
+        id="jh-create-entity"
+        data-cy="entityCreateButton"
+        class="btn btn-primary jh-create-entity create-terrain"
+        [routerLink]="['/terrain/new']"
+      >
+        <fa-icon icon="plus"></fa-icon>
+        <span jhiTranslate="fitFootApp.terrain.home.createLabel"> Create a new Terrain </span>
+      </button>
+    </div>
+  </h2>
+
+  <jhi-alert-error></jhi-alert-error>
+
+  <jhi-alert></jhi-alert>
+
+  <div class="alert alert-warning" id="no-result" *ngIf="terrains?.length === 0">
+    <span jhiTranslate="fitFootApp.terrain.home.notFound">No Terrains found</span>
+  </div>
+
+  <div class="table-responsive table-entities" id="entities" *ngIf="terrains && terrains.length > 0">
+    <table class="table table-striped" aria-describedby="page-heading">
+      <thead>
+        <tr jhiSort [(predicate)]="predicate" [(ascending)]="ascending" (sortChange)="navigateToWithComponentValues()">
+          <th scope="col" jhiSortBy="id">
+            <div class="d-flex">
+              <span jhiTranslate="global.field.id">ID</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="nom">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.terrain.nom">Nom</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="capaciteParEquipe">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.terrain.capaciteParEquipe">Capacite Par Equipe</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col" jhiSortBy="complexe.id">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.terrain.complexe">Complexe</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let terrain of terrains; trackBy: trackId" data-cy="entityTable">
+          <td>
+            <a [routerLink]="['/terrain', terrain.id, 'view']">{{ terrain.id }}</a>
+          </td>
+          <td>{{ terrain.nom }}</td>
+          <td>{{ terrain.capaciteParEquipe }}</td>
+          <td>
+            <div *ngIf="terrain.complexe">
+              <a [routerLink]="['/complexe', terrain.complexe.id, 'view']">{{ terrain.complexe.id }}</a>
+            </div>
+          </td>
+          <td class="text-end">
+            <div class="btn-group">
+              <button
+                type="submit"
+                [routerLink]="['/terrain', terrain.id, 'view']"
+                class="btn btn-info btn-sm"
+                data-cy="entityDetailsButton"
+              >
+                <fa-icon icon="eye"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.view">View</span>
+              </button>
+
+              <button
+                type="submit"
+                [routerLink]="['/terrain', terrain.id, 'edit']"
+                class="btn btn-primary btn-sm"
+                data-cy="entityEditButton"
+              >
+                <fa-icon icon="pencil-alt"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.edit">Edit</span>
+              </button>
+
+              <button type="submit" (click)="delete(terrain)" class="btn btn-danger btn-sm" data-cy="entityDeleteButton">
+                <fa-icon icon="times"></fa-icon>
+                <span class="d-none d-md-inline" jhiTranslate="entity.action.delete">Delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

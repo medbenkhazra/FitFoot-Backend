@@ -1,0 +1,30 @@
+{
+  "applications": "*",
+  "changelogDate": "20221205182319",
+  "dto": "no",
+  "embedded": false,
+  "entityTableName": "equipe",
+  "fields": [],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "Equipe",
+  "pagination": "no",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "annonce",
+      "otherEntityRelationshipName": "equipe",
+      "ownerSide": true,
+      "relationshipName": "annonce",
+      "relationshipType": "one-to-one"
+    },
+    {
+      "otherEntityName": "joueur",
+      "otherEntityRelationshipName": "equipe",
+      "ownerSide": false,
+      "relationshipName": "joueur",
+      "relationshipType": "many-to-many"
+    }
+  ],
+  "service": "no"
+}

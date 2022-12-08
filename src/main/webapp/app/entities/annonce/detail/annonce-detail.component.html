@@ -1,0 +1,68 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="annonce">
+      <h2 data-cy="annonceDetailsHeading"><span jhiTranslate="fitFootApp.annonce.detail.title">Annonce</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ annonce.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.annonce.description">Description</span></dt>
+        <dd>
+          <span>{{ annonce.description }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.annonce.heureDebut">Heure Debut</span></dt>
+        <dd>
+          <span>{{ annonce.heureDebut | formatMediumDatetime }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.annonce.heureFin">Heure Fin</span></dt>
+        <dd>
+          <span>{{ annonce.heureFin | formatMediumDatetime }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.annonce.duree">Duree</span></dt>
+        <dd>
+          <span>{{ annonce.duree }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.annonce.validation">Validation</span></dt>
+        <dd>
+          <span>{{ annonce.validation }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.annonce.nombreParEquipe">Nombre Par Equipe</span></dt>
+        <dd>
+          <span>{{ annonce.nombreParEquipe }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.annonce.status">Status</span></dt>
+        <dd>
+          <span jhiTranslate="{{ 'fitFootApp.STATUS.' + annonce.status }}">{{ annonce.status }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.annonce.terrain">Terrain</span></dt>
+        <dd>
+          <div *ngIf="annonce.terrain">
+            <a [routerLink]="['/terrain', annonce.terrain.id, 'view']">{{ annonce.terrain.id }}</a>
+          </div>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.annonce.responsable">Responsable</span></dt>
+        <dd>
+          <div *ngIf="annonce.responsable">
+            <a [routerLink]="['/joueur', annonce.responsable.id, 'view']">{{ annonce.responsable.id }}</a>
+          </div>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+      </button>
+
+      <button type="button" [routerLink]="['/annonce', annonce.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

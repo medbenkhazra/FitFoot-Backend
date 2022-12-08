@@ -1,0 +1,25 @@
+{
+  "fitFootApp": {
+    "ville": {
+      "home": {
+        "title": "Villes",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Ville",
+        "createOrEditLabel": "Create or edit a Ville",
+        "notFound": "No Villes found"
+      },
+      "created": "A new Ville is created with identifier {{ param }}",
+      "updated": "A Ville is updated with identifier {{ param }}",
+      "deleted": "A Ville is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Ville {{ id }}?"
+      },
+      "detail": {
+        "title": "Ville"
+      },
+      "id": "ID",
+      "nom": "Nom",
+      "quartier": "Quartier"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "applications": "*",
+  "changelogDate": "20221205182325",
+  "dto": "no",
+  "embedded": false,
+  "entityTableName": "ville",
+  "fields": [
+    {
+      "fieldName": "nom",
+      "fieldType": "String"
+    }
+  ],
+  "fluentMethods": true,
+  "jpaMetamodelFiltering": false,
+  "name": "Ville",
+  "pagination": "no",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityName": "quartier",
+      "otherEntityRelationshipName": "ville",
+      "relationshipName": "quartier",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "service": "no"
+}

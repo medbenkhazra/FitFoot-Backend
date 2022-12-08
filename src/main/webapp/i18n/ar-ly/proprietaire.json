@@ -1,0 +1,29 @@
+{
+  "fitFootApp": {
+    "proprietaire": {
+      "home": {
+        "title": "Proprietaires",
+        "refreshListLabel": "Refresh list",
+        "createLabel": "Create a new Proprietaire",
+        "createOrEditLabel": "Create or edit a Proprietaire",
+        "notFound": "No Proprietaires found"
+      },
+      "created": "A new Proprietaire is created with identifier {{ param }}",
+      "updated": "A Proprietaire is updated with identifier {{ param }}",
+      "deleted": "A Proprietaire is deleted with identifier {{ param }}",
+      "delete": {
+        "question": "Are you sure you want to delete Proprietaire {{ id }}?"
+      },
+      "detail": {
+        "title": "Proprietaire"
+      },
+      "id": "ID",
+      "avatar": "Avatar",
+      "cin": "Cin",
+      "rib": "Rib",
+      "numTel": "Num Tel",
+      "user": "User",
+      "complexe": "Complexe"
+    }
+  }
+}

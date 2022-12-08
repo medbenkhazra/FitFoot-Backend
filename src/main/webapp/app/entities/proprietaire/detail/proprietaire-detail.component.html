@@ -1,0 +1,57 @@
+<div class="d-flex justify-content-center">
+  <div class="col-8">
+    <div *ngIf="proprietaire">
+      <h2 data-cy="proprietaireDetailsHeading"><span jhiTranslate="fitFootApp.proprietaire.detail.title">Proprietaire</span></h2>
+
+      <hr />
+
+      <jhi-alert-error></jhi-alert-error>
+
+      <jhi-alert></jhi-alert>
+
+      <dl class="row-md jh-entity-details">
+        <dt><span jhiTranslate="global.field.id">ID</span></dt>
+        <dd>
+          <span>{{ proprietaire.id }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.proprietaire.avatar">Avatar</span></dt>
+        <dd>
+          <div *ngIf="proprietaire.avatar">
+            <a (click)="openFile(proprietaire.avatar, proprietaire.avatarContentType)">
+              <img
+                [src]="'data:' + proprietaire.avatarContentType + ';base64,' + proprietaire.avatar"
+                style="max-width: 100%"
+                alt="proprietaire image"
+              />
+            </a>
+            {{ proprietaire.avatarContentType }}, {{ byteSize(proprietaire.avatar) }}
+          </div>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.proprietaire.cin">Cin</span></dt>
+        <dd>
+          <span>{{ proprietaire.cin }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.proprietaire.rib">Rib</span></dt>
+        <dd>
+          <span>{{ proprietaire.rib }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.proprietaire.numTel">Num Tel</span></dt>
+        <dd>
+          <span>{{ proprietaire.numTel }}</span>
+        </dd>
+        <dt><span jhiTranslate="fitFootApp.proprietaire.user">User</span></dt>
+        <dd>
+          <span>{{ proprietaire.user?.id }}</span>
+        </dd>
+      </dl>
+
+      <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">
+        <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span jhiTranslate="entity.action.back">Back</span>
+      </button>
+
+      <button type="button" [routerLink]="['/proprietaire', proprietaire.id, 'edit']" class="btn btn-primary">
+        <fa-icon icon="pencil-alt"></fa-icon>&nbsp;<span jhiTranslate="entity.action.edit">Edit</span>
+      </button>
+    </div>
+  </div>
+</div>

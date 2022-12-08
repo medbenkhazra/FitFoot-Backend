@@ -1,0 +1,29 @@
+{
+  "fitFootApp": {
+    "proprietaire": {
+      "home": {
+        "title": "Proprietaires",
+        "refreshListLabel": "Actualiser la liste",
+        "createLabel": "Créer un nouveau Proprietaire",
+        "createOrEditLabel": "Créer ou éditer un Proprietaire",
+        "notFound": "Aucun Proprietaire trouvé"
+      },
+      "created": "Un nouveau Proprietaire a été créé avec l'identifiant {{ param }}",
+      "updated": "Le Proprietaire avec l'identifiant {{ param }} a été mis à jour",
+      "deleted": "Le Proprietaire avec l'identifiant {{ param }} a été supprimé",
+      "delete": {
+        "question": "Êtes-vous certain de vouloir supprimer le Proprietaire {{ id }} ?"
+      },
+      "detail": {
+        "title": "Proprietaire"
+      },
+      "id": "ID",
+      "avatar": "Avatar",
+      "cin": "Cin",
+      "rib": "Rib",
+      "numTel": "Num Tel",
+      "user": "User",
+      "complexe": "Complexe"
+    }
+  }
+}

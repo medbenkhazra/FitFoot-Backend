@@ -1,0 +1,72 @@
+entity User {
+}
+
+entity Joueur {	
+birthDay LocalDate 
+gender GENDER
+avatar ImageBlob
+}
+
+enum GENDER {
+MALE, FEMALE 
+}
+enum STATUS {
+OUVERT, FEREME , ENCOURS
+}
+entity Equipe {
+}
+
+entity Annonce {
+	description String
+    heureDebut ZonedDateTime
+    heureFin ZonedDateTime 
+    duree Integer
+    validation Boolean
+    nombreParEquipe Integer
+    status STATUS
+}
+entity Proprietaire {
+	avatar ImageBlob
+	cin String
+    rib String
+    numTel String 
+}
+entity Quartier {
+    nom String
+}
+entity Complexe {
+	nom String 
+    longitude Double
+    latitude Double
+}
+entity Terrain {
+	nom String 
+    capaciteParEquipe Integer
+}
+entity Ville {
+nom String 
+}
+entity Reservation {
+date LocalDate
+heureDebut ZonedDateTime
+heureFin ZonedDateTime
+}
+relationship OneToOne {
+  Proprietaire{user} to User
+  Joueur{user} to User
+  Equipe to Annonce
+  Annonce to Terrain
+}
+relationship ManyToMany {
+    Joueur to Equipe
+}
+// defining multiple OneToMany relationships with comments
+relationship OneToMany {
+	Ville to Quartier
+	Complexe to Terrain
+  	Quartier to Joueur
+	Quartier to Complexe
+	Proprietaire to Complexe
+	Terrain to Reservation
+    Joueur{annonces} to Annonce{responsable}
+}
