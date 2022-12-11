@@ -107,7 +107,7 @@ public class SecurityConfiguration {
             // .pathMatchers("/api/terrains/**").permitAll()
         .pathMatchers("/api/admin/**").hasAuthority(AuthoritiesConstants.ADMIN)
             .pathMatchers("/api/**").permitAll()
-            .pathMatchers("/api/**").authenticated()
+            // .pathMatchers("/api/**").authenticated()
             .pathMatchers("/services/**").authenticated()
             .pathMatchers("/management/health").permitAll()
             .pathMatchers("/management/health/**").permitAll()
