@@ -42,12 +42,11 @@ public class SecurityConfiguration {
     private final CorsWebFilter corsWebFilter;
 
     public SecurityConfiguration(
-        ReactiveUserDetailsService userDetailsService,
-        TokenProvider tokenProvider,
-        JHipsterProperties jHipsterProperties,
-        SecurityProblemSupport problemSupport,
-        CorsWebFilter corsWebFilter
-    ) {
+            ReactiveUserDetailsService userDetailsService,
+            TokenProvider tokenProvider,
+            JHipsterProperties jHipsterProperties,
+            SecurityProblemSupport problemSupport,
+            CorsWebFilter corsWebFilter) {
         this.userDetailsService = userDetailsService;
         this.tokenProvider = tokenProvider;
         this.jHipsterProperties = jHipsterProperties;
@@ -63,8 +62,7 @@ public class SecurityConfiguration {
     @Bean
     public ReactiveAuthenticationManager reactiveAuthenticationManager() {
         UserDetailsRepositoryReactiveAuthenticationManager authenticationManager = new UserDetailsRepositoryReactiveAuthenticationManager(
-            userDetailsService
-        );
+                userDetailsService);
         authenticationManager.setPasswordEncoder(passwordEncoder());
         return authenticationManager;
     }
@@ -104,7 +102,9 @@ public class SecurityConfiguration {
             .pathMatchers("/api/activate").permitAll()
             .pathMatchers("/api/account/reset-password/init").permitAll()
             .pathMatchers("/api/account/reset-password/finish").permitAll()
-            .pathMatchers("/api/admin/**").hasAuthority(AuthoritiesConstants.ADMIN)
+                .pathMatchers("/api/reservations/**").permitAll()
+            .pathMatchers("/api/terrains/**").permitAll()
+        .pathMatchers("/api/admin/**").hasAuthority(AuthoritiesConstants.ADMIN)
             .pathMatchers("/api/**").authenticated()
             .pathMatchers("/services/**").authenticated()
             .pathMatchers("/management/health").permitAll()
