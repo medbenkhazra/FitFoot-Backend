@@ -19,8 +19,8 @@
       },
       "id": "ID",
       "nom": "Nom",
-      "joueur": "Joueur",
       "complexe": "Complexe",
+      "joueur": "Joueur",
       "ville": "Ville"
     }
   }

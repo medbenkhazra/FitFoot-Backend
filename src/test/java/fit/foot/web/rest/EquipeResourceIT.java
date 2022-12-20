@@ -2,30 +2,30 @@ package fit.foot.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import fit.foot.IntegrationTest;
 import fit.foot.domain.Equipe;
-import fit.foot.repository.EntityManager;
 import fit.foot.repository.EquipeRepository;
-import java.time.Duration;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
-import org.junit.jupiter.api.AfterEach;
+import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Integration tests for the {@link EquipeResource} REST controller.
  */
 @IntegrationTest
-@AutoConfigureWebTestClient(timeout = IntegrationTest.DEFAULT_ENTITY_TIMEOUT)
+@AutoConfigureMockMvc
 @WithMockUser
 class EquipeResourceIT {
 
@@ -42,7 +42,7 @@ class EquipeResourceIT {
     private EntityManager em;
 
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc restEquipeMockMvc;
 
     private Equipe equipe;
 
@@ -68,358 +68,285 @@ class EquipeResourceIT {
         return equipe;
     }
 
-    public static void deleteEntities(EntityManager em) {
-        try {
-            em.deleteAll(Equipe.class).block();
-        } catch (Exception e) {
-            // It can fail, if other entities are still referring this - it will be removed later.
-        }
-    }
-
-    @AfterEach
-    public void cleanup() {
-        deleteEntities(em);
-    }
-
     @BeforeEach
     public void initTest() {
-        deleteEntities(em);
         equipe = createEntity(em);
     }
 
     @Test
+    @Transactional
     void createEquipe() throws Exception {
-        int databaseSizeBeforeCreate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeCreate = equipeRepository.findAll().size();
         // Create the Equipe
-        webTestClient
-            .post()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(equipe))
-            .exchange()
-            .expectStatus()
-            .isCreated();
+        restEquipeMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(equipe)))
+            .andExpect(status().isCreated());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeCreate + 1);
         Equipe testEquipe = equipeList.get(equipeList.size() - 1);
     }
 
     @Test
+    @Transactional
     void createEquipeWithExistingId() throws Exception {
         // Create the Equipe with an existing ID
         equipe.setId(1L);
 
-        int databaseSizeBeforeCreate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeCreate = equipeRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
-        webTestClient
-            .post()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(equipe))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restEquipeMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(equipe)))
+            .andExpect(status().isBadRequest());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
-    void getAllEquipesAsStream() {
+    @Transactional
+    void getAllEquipes() throws Exception {
         // Initialize the database
-        equipeRepository.save(equipe).block();
-
-        List<Equipe> equipeList = webTestClient
-            .get()
-            .uri(ENTITY_API_URL)
-            .accept(MediaType.APPLICATION_NDJSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentTypeCompatibleWith(MediaType.APPLICATION_NDJSON)
-            .returnResult(Equipe.class)
-            .getResponseBody()
-            .filter(equipe::equals)
-            .collectList()
-            .block(Duration.ofSeconds(5));
-
-        assertThat(equipeList).isNotNull();
-        assertThat(equipeList).hasSize(1);
-        Equipe testEquipe = equipeList.get(0);
-    }
-
-    @Test
-    void getAllEquipes() {
-        // Initialize the database
-        equipeRepository.save(equipe).block();
+        equipeRepository.saveAndFlush(equipe);
 
         // Get all the equipeList
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL + "?sort=id,desc")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.[*].id")
-            .value(hasItem(equipe.getId().intValue()));
+        restEquipeMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(equipe.getId().intValue())));
     }
 
     @Test
-    void getEquipe() {
+    @Transactional
+    void getEquipe() throws Exception {
         // Initialize the database
-        equipeRepository.save(equipe).block();
+        equipeRepository.saveAndFlush(equipe);
 
         // Get the equipe
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL_ID, equipe.getId())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.id")
-            .value(is(equipe.getId().intValue()));
+        restEquipeMockMvc
+            .perform(get(ENTITY_API_URL_ID, equipe.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.id").value(equipe.getId().intValue()));
     }
 
     @Test
-    void getNonExistingEquipe() {
+    @Transactional
+    void getNonExistingEquipe() throws Exception {
         // Get the equipe
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL_ID, Long.MAX_VALUE)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isNotFound();
+        restEquipeMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
     }
 
     @Test
+    @Transactional
     void putExistingEquipe() throws Exception {
         // Initialize the database
-        equipeRepository.save(equipe).block();
+        equipeRepository.saveAndFlush(equipe);
 
-        int databaseSizeBeforeUpdate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = equipeRepository.findAll().size();
 
         // Update the equipe
-        Equipe updatedEquipe = equipeRepository.findById(equipe.getId()).block();
+        Equipe updatedEquipe = equipeRepository.findById(equipe.getId()).get();
+        // Disconnect from session so that the updates on updatedEquipe are not directly saved in db
+        em.detach(updatedEquipe);
 
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, updatedEquipe.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(updatedEquipe))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restEquipeMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, updatedEquipe.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(updatedEquipe))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeUpdate);
         Equipe testEquipe = equipeList.get(equipeList.size() - 1);
     }
 
     @Test
+    @Transactional
     void putNonExistingEquipe() throws Exception {
-        int databaseSizeBeforeUpdate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = equipeRepository.findAll().size();
         equipe.setId(count.incrementAndGet());
 
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, equipe.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(equipe))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restEquipeMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, equipe.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(equipe))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void putWithIdMismatchEquipe() throws Exception {
-        int databaseSizeBeforeUpdate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = equipeRepository.findAll().size();
         equipe.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, count.incrementAndGet())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(equipe))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restEquipeMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, count.incrementAndGet())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(equipe))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void putWithMissingIdPathParamEquipe() throws Exception {
-        int databaseSizeBeforeUpdate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = equipeRepository.findAll().size();
         equipe.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(equipe))
-            .exchange()
-            .expectStatus()
-            .isEqualTo(405);
+        restEquipeMockMvc
+            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(equipe)))
+            .andExpect(status().isMethodNotAllowed());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void partialUpdateEquipeWithPatch() throws Exception {
         // Initialize the database
-        equipeRepository.save(equipe).block();
+        equipeRepository.saveAndFlush(equipe);
 
-        int databaseSizeBeforeUpdate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = equipeRepository.findAll().size();
 
         // Update the equipe using partial update
         Equipe partialUpdatedEquipe = new Equipe();
         partialUpdatedEquipe.setId(equipe.getId());
 
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, partialUpdatedEquipe.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(partialUpdatedEquipe))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restEquipeMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedEquipe.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedEquipe))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeUpdate);
         Equipe testEquipe = equipeList.get(equipeList.size() - 1);
     }
 
     @Test
+    @Transactional
     void fullUpdateEquipeWithPatch() throws Exception {
         // Initialize the database
-        equipeRepository.save(equipe).block();
+        equipeRepository.saveAndFlush(equipe);
 
-        int databaseSizeBeforeUpdate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = equipeRepository.findAll().size();
 
         // Update the equipe using partial update
         Equipe partialUpdatedEquipe = new Equipe();
         partialUpdatedEquipe.setId(equipe.getId());
 
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, partialUpdatedEquipe.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(partialUpdatedEquipe))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restEquipeMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedEquipe.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedEquipe))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeUpdate);
         Equipe testEquipe = equipeList.get(equipeList.size() - 1);
     }
 
     @Test
+    @Transactional
     void patchNonExistingEquipe() throws Exception {
-        int databaseSizeBeforeUpdate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = equipeRepository.findAll().size();
         equipe.setId(count.incrementAndGet());
 
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, equipe.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(equipe))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restEquipeMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, equipe.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(equipe))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void patchWithIdMismatchEquipe() throws Exception {
-        int databaseSizeBeforeUpdate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = equipeRepository.findAll().size();
         equipe.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, count.incrementAndGet())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(equipe))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restEquipeMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, count.incrementAndGet())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(equipe))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void patchWithMissingIdPathParamEquipe() throws Exception {
-        int databaseSizeBeforeUpdate = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = equipeRepository.findAll().size();
         equipe.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(equipe))
-            .exchange()
-            .expectStatus()
-            .isEqualTo(405);
+        restEquipeMockMvc
+            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(TestUtil.convertObjectToJsonBytes(equipe)))
+            .andExpect(status().isMethodNotAllowed());
 
         // Validate the Equipe in the database
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
-    void deleteEquipe() {
+    @Transactional
+    void deleteEquipe() throws Exception {
         // Initialize the database
-        equipeRepository.save(equipe).block();
+        equipeRepository.saveAndFlush(equipe);
 
-        int databaseSizeBeforeDelete = equipeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeDelete = equipeRepository.findAll().size();
 
         // Delete the equipe
-        webTestClient
-            .delete()
-            .uri(ENTITY_API_URL_ID, equipe.getId())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isNoContent();
+        restEquipeMockMvc
+            .perform(delete(ENTITY_API_URL_ID, equipe.getId()).accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        List<Equipe> equipeList = equipeRepository.findAll().collectList().block();
+        List<Equipe> equipeList = equipeRepository.findAll();
         assertThat(equipeList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }

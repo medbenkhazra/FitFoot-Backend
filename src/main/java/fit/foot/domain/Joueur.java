@@ -6,56 +6,57 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import javax.persistence.*;
 
 /**
  * A Joueur.
  */
-@Table("joueur")
+@Entity
+@Table(name = "joueur")
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class Joueur implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Column("birth_day")
+    @Column(name = "birth_day")
     private LocalDate birthDay;
 
-    @Column("gender")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
     private GENDER gender;
 
-    @Column("avatar")
+    @Lob
+    @Column(name = "avatar")
     private byte[] avatar;
 
-    @Column("avatar_content_type")
+    @Column(name = "avatar_content_type")
     private String avatarContentType;
 
-    @Transient
+    @OneToOne
+    @JoinColumn(unique = true)
     private User user;
 
-    @Transient
+    @OneToMany(mappedBy = "responsable")
     @JsonIgnoreProperties(value = { "terrain", "equipe", "responsable" }, allowSetters = true)
     private Set<Annonce> annonces = new HashSet<>();
 
-    @Transient
+    @ManyToMany
+    @JoinTable(
+        name = "rel_joueur__equipe",
+        joinColumns = @JoinColumn(name = "joueur_id"),
+        inverseJoinColumns = @JoinColumn(name = "equipe_id")
+    )
     @JsonIgnoreProperties(value = { "annonce", "joueurs" }, allowSetters = true)
     private Set<Equipe> equipes = new HashSet<>();
 
-    @Transient
-    @JsonIgnoreProperties(value = { "joueurs", "complexes", "ville" }, allowSetters = true)
+    @ManyToOne
+    @JsonIgnoreProperties(value = { "complexes", "joueurs", "ville" }, allowSetters = true)
     private Quartier quartier;
-
-    @Column("user_id")
-    private Long userId;
-
-    @Column("quartier_id")
-    private Long quartierId;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -130,7 +131,6 @@ public class Joueur implements Serializable {
 
     public void setUser(User user) {
         this.user = user;
-        this.userId = user != null ? user.getId() : null;
     }
 
     public Joueur user(User user) {
@@ -200,28 +200,11 @@ public class Joueur implements Serializable {
 
     public void setQuartier(Quartier quartier) {
         this.quartier = quartier;
-        this.quartierId = quartier != null ? quartier.getId() : null;
     }
 
     public Joueur quartier(Quartier quartier) {
         this.setQuartier(quartier);
         return this;
-    }
-
-    public Long getUserId() {
-        return this.userId;
-    }
-
-    public void setUserId(Long user) {
-        this.userId = user;
-    }
-
-    public Long getQuartierId() {
-        return this.quartierId;
-    }
-
-    public void setQuartierId(Long quartier) {
-        this.quartierId = quartier;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

@@ -4,60 +4,57 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fit.foot.domain.enumeration.STATUS;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import javax.persistence.*;
 
 /**
  * A Annonce.
  */
-@Table("annonce")
+@Entity
+@Table(name = "annonce")
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class Annonce implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Column("description")
+    @Column(name = "description")
     private String description;
 
-    @Column("heure_debut")
+    @Column(name = "heure_debut")
     private ZonedDateTime heureDebut;
 
-    @Column("heure_fin")
+    @Column(name = "heure_fin")
     private ZonedDateTime heureFin;
 
-    @Column("duree")
+    @Column(name = "duree")
     private Integer duree;
 
-    @Column("validation")
+    @Column(name = "validation")
     private Boolean validation;
 
-    @Column("nombre_par_equipe")
+    @Column(name = "nombre_par_equipe")
     private Integer nombreParEquipe;
 
-    @Column("status")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private STATUS status;
 
-    @Transient
+    @JsonIgnoreProperties(value = { "reservations", "annonce", "complexe" }, allowSetters = true)
+    @OneToOne
+    @JoinColumn(unique = true)
     private Terrain terrain;
 
-    @Transient
+    @JsonIgnoreProperties(value = { "annonce", "joueurs" }, allowSetters = true)
+    @OneToOne(mappedBy = "annonce")
     private Equipe equipe;
 
-    @Transient
+    @ManyToOne
     @JsonIgnoreProperties(value = { "user", "annonces", "equipes", "quartier" }, allowSetters = true)
     private Joueur responsable;
-
-    @Column("terrain_id")
-    private Long terrainId;
-
-    @Column("responsable_id")
-    private Long responsableId;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -171,7 +168,6 @@ public class Annonce implements Serializable {
 
     public void setTerrain(Terrain terrain) {
         this.terrain = terrain;
-        this.terrainId = terrain != null ? terrain.getId() : null;
     }
 
     public Annonce terrain(Terrain terrain) {
@@ -204,28 +200,11 @@ public class Annonce implements Serializable {
 
     public void setResponsable(Joueur joueur) {
         this.responsable = joueur;
-        this.responsableId = joueur != null ? joueur.getId() : null;
     }
 
     public Annonce responsable(Joueur joueur) {
         this.setResponsable(joueur);
         return this;
-    }
-
-    public Long getTerrainId() {
-        return this.terrainId;
-    }
-
-    public void setTerrainId(Long terrain) {
-        this.terrainId = terrain;
-    }
-
-    public Long getResponsableId() {
-        return this.responsableId;
-    }
-
-    public void setResponsableId(Long joueur) {
-        this.responsableId = joueur;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

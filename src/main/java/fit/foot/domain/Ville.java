@@ -4,29 +4,28 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import javax.persistence.*;
 
 /**
  * A Ville.
  */
-@Table("ville")
+@Entity
+@Table(name = "ville")
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class Ville implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Column("nom")
+    @Column(name = "nom")
     private String nom;
 
-    @Transient
-    @JsonIgnoreProperties(value = { "joueurs", "complexes", "ville" }, allowSetters = true)
+    @OneToMany(mappedBy = "ville")
+    @JsonIgnoreProperties(value = { "complexes", "joueurs", "ville" }, allowSetters = true)
     private Set<Quartier> quartiers = new HashSet<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

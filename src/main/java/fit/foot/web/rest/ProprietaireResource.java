@@ -11,16 +11,11 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import tech.jhipster.web.util.HeaderUtil;
-import tech.jhipster.web.util.reactive.ResponseUtil;
+import tech.jhipster.web.util.ResponseUtil;
 
 /**
  * REST controller for managing {@link fit.foot.domain.Proprietaire}.
@@ -51,23 +46,16 @@ public class ProprietaireResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/proprietaires")
-    public Mono<ResponseEntity<Proprietaire>> createProprietaire(@RequestBody Proprietaire proprietaire) throws URISyntaxException {
+    public ResponseEntity<Proprietaire> createProprietaire(@RequestBody Proprietaire proprietaire) throws URISyntaxException {
         log.debug("REST request to save Proprietaire : {}", proprietaire);
         if (proprietaire.getId() != null) {
             throw new BadRequestAlertException("A new proprietaire cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        return proprietaireRepository
-            .save(proprietaire)
-            .map(result -> {
-                try {
-                    return ResponseEntity
-                        .created(new URI("/api/proprietaires/" + result.getId()))
-                        .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-                        .body(result);
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+        Proprietaire result = proprietaireRepository.save(proprietaire);
+        return ResponseEntity
+            .created(new URI("/api/proprietaires/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -81,7 +69,7 @@ public class ProprietaireResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/proprietaires/{id}")
-    public Mono<ResponseEntity<Proprietaire>> updateProprietaire(
+    public ResponseEntity<Proprietaire> updateProprietaire(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestBody Proprietaire proprietaire
     ) throws URISyntaxException {
@@ -93,23 +81,15 @@ public class ProprietaireResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        return proprietaireRepository
-            .existsById(id)
-            .flatMap(exists -> {
-                if (!exists) {
-                    return Mono.error(new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound"));
-                }
+        if (!proprietaireRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
 
-                return proprietaireRepository
-                    .save(proprietaire)
-                    .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                    .map(result ->
-                        ResponseEntity
-                            .ok()
-                            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-                            .body(result)
-                    );
-            });
+        Proprietaire result = proprietaireRepository.save(proprietaire);
+        return ResponseEntity
+            .ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, proprietaire.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -124,7 +104,7 @@ public class ProprietaireResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/proprietaires/{id}", consumes = { "application/json", "application/merge-patch+json" })
-    public Mono<ResponseEntity<Proprietaire>> partialUpdateProprietaire(
+    public ResponseEntity<Proprietaire> partialUpdateProprietaire(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestBody Proprietaire proprietaire
     ) throws URISyntaxException {
@@ -136,45 +116,37 @@ public class ProprietaireResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        return proprietaireRepository
-            .existsById(id)
-            .flatMap(exists -> {
-                if (!exists) {
-                    return Mono.error(new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound"));
+        if (!proprietaireRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        Optional<Proprietaire> result = proprietaireRepository
+            .findById(proprietaire.getId())
+            .map(existingProprietaire -> {
+                if (proprietaire.getAvatar() != null) {
+                    existingProprietaire.setAvatar(proprietaire.getAvatar());
+                }
+                if (proprietaire.getAvatarContentType() != null) {
+                    existingProprietaire.setAvatarContentType(proprietaire.getAvatarContentType());
+                }
+                if (proprietaire.getCin() != null) {
+                    existingProprietaire.setCin(proprietaire.getCin());
+                }
+                if (proprietaire.getRib() != null) {
+                    existingProprietaire.setRib(proprietaire.getRib());
+                }
+                if (proprietaire.getNumTel() != null) {
+                    existingProprietaire.setNumTel(proprietaire.getNumTel());
                 }
 
-                Mono<Proprietaire> result = proprietaireRepository
-                    .findById(proprietaire.getId())
-                    .map(existingProprietaire -> {
-                        if (proprietaire.getAvatar() != null) {
-                            existingProprietaire.setAvatar(proprietaire.getAvatar());
-                        }
-                        if (proprietaire.getAvatarContentType() != null) {
-                            existingProprietaire.setAvatarContentType(proprietaire.getAvatarContentType());
-                        }
-                        if (proprietaire.getCin() != null) {
-                            existingProprietaire.setCin(proprietaire.getCin());
-                        }
-                        if (proprietaire.getRib() != null) {
-                            existingProprietaire.setRib(proprietaire.getRib());
-                        }
-                        if (proprietaire.getNumTel() != null) {
-                            existingProprietaire.setNumTel(proprietaire.getNumTel());
-                        }
+                return existingProprietaire;
+            })
+            .map(proprietaireRepository::save);
 
-                        return existingProprietaire;
-                    })
-                    .flatMap(proprietaireRepository::save);
-
-                return result
-                    .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                    .map(res ->
-                        ResponseEntity
-                            .ok()
-                            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, res.getId().toString()))
-                            .body(res)
-                    );
-            });
+        return ResponseUtil.wrapOrNotFound(
+            result,
+            HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, proprietaire.getId().toString())
+        );
     }
 
     /**
@@ -183,18 +155,8 @@ public class ProprietaireResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of proprietaires in body.
      */
     @GetMapping("/proprietaires")
-    public Mono<List<Proprietaire>> getAllProprietaires() {
+    public List<Proprietaire> getAllProprietaires() {
         log.debug("REST request to get all Proprietaires");
-        return proprietaireRepository.findAll().collectList();
-    }
-
-    /**
-     * {@code GET  /proprietaires} : get all the proprietaires as a stream.
-     * @return the {@link Flux} of proprietaires.
-     */
-    @GetMapping(value = "/proprietaires", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public Flux<Proprietaire> getAllProprietairesAsStream() {
-        log.debug("REST request to get all Proprietaires as a stream");
         return proprietaireRepository.findAll();
     }
 
@@ -205,9 +167,9 @@ public class ProprietaireResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the proprietaire, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/proprietaires/{id}")
-    public Mono<ResponseEntity<Proprietaire>> getProprietaire(@PathVariable Long id) {
+    public ResponseEntity<Proprietaire> getProprietaire(@PathVariable Long id) {
         log.debug("REST request to get Proprietaire : {}", id);
-        Mono<Proprietaire> proprietaire = proprietaireRepository.findById(id);
+        Optional<Proprietaire> proprietaire = proprietaireRepository.findById(id);
         return ResponseUtil.wrapOrNotFound(proprietaire);
     }
 
@@ -218,17 +180,12 @@ public class ProprietaireResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/proprietaires/{id}")
-    public Mono<ResponseEntity<Void>> deleteProprietaire(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteProprietaire(@PathVariable Long id) {
         log.debug("REST request to delete Proprietaire : {}", id);
-        return proprietaireRepository
-            .deleteById(id)
-            .then(
-                Mono.just(
-                    ResponseEntity
-                        .noContent()
-                        .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
-                        .build()
-                )
-            );
+        proprietaireRepository.deleteById(id);
+        return ResponseEntity
+            .noContent()
+            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
+            .build();
     }
 }

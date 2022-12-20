@@ -4,43 +4,40 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import javax.persistence.*;
 
 /**
  * A Terrain.
  */
-@Table("terrain")
+@Entity
+@Table(name = "terrain")
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class Terrain implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Column("nom")
+    @Column(name = "nom")
     private String nom;
 
-    @Column("capacite_par_equipe")
+    @Column(name = "capacite_par_equipe")
     private Integer capaciteParEquipe;
 
-    @Transient
+    @OneToMany(mappedBy = "terrain")
     @JsonIgnoreProperties(value = { "terrain" }, allowSetters = true)
     private Set<Reservation> reservations = new HashSet<>();
 
-    @Transient
+    @JsonIgnoreProperties(value = { "terrain", "equipe", "responsable" }, allowSetters = true)
+    @OneToOne(mappedBy = "terrain")
     private Annonce annonce;
 
-    @Transient
+    @ManyToOne
     @JsonIgnoreProperties(value = { "terrains", "quartier", "proprietaire" }, allowSetters = true)
     private Complexe complexe;
-
-    @Column("complexe_id")
-    private Long complexeId;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -139,20 +136,11 @@ public class Terrain implements Serializable {
 
     public void setComplexe(Complexe complexe) {
         this.complexe = complexe;
-        this.complexeId = complexe != null ? complexe.getId() : null;
     }
 
     public Terrain complexe(Complexe complexe) {
         this.setComplexe(complexe);
         return this;
-    }
-
-    public Long getComplexeId() {
-        return this.complexeId;
-    }
-
-    public void setComplexeId(Long complexe) {
-        this.complexeId = complexe;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

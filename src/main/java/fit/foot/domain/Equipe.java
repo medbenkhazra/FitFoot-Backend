@@ -4,33 +4,31 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import javax.persistence.*;
 
 /**
  * A Equipe.
  */
-@Table("equipe")
+@Entity
+@Table(name = "equipe")
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class Equipe implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Transient
+    @JsonIgnoreProperties(value = { "terrain", "equipe", "responsable" }, allowSetters = true)
+    @OneToOne
+    @JoinColumn(unique = true)
     private Annonce annonce;
 
-    @Transient
+    @ManyToMany(mappedBy = "equipes")
     @JsonIgnoreProperties(value = { "user", "annonces", "equipes", "quartier" }, allowSetters = true)
     private Set<Joueur> joueurs = new HashSet<>();
-
-    @Column("annonce_id")
-    private Long annonceId;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -53,7 +51,6 @@ public class Equipe implements Serializable {
 
     public void setAnnonce(Annonce annonce) {
         this.annonce = annonce;
-        this.annonceId = annonce != null ? annonce.getId() : null;
     }
 
     public Equipe annonce(Annonce annonce) {
@@ -90,14 +87,6 @@ public class Equipe implements Serializable {
         this.joueurs.remove(joueur);
         joueur.getEquipes().remove(this);
         return this;
-    }
-
-    public Long getAnnonceId() {
-        return this.annonceId;
-    }
-
-    public void setAnnonceId(Long annonce) {
-        this.annonceId = annonce;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

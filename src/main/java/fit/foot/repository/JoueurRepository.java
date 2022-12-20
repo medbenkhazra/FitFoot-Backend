@@ -1,75 +1,31 @@
 package fit.foot.repository;
 
 import fit.foot.domain.Joueur;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.r2dbc.repository.Query;
-import org.springframework.data.relational.core.query.Criteria;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.data.jpa.repository.*;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
- * Spring Data R2DBC repository for the Joueur entity.
+ * Spring Data JPA repository for the Joueur entity.
+ *
+ * When extending this class, extend JoueurRepositoryWithBagRelationships too.
+ * For more information refer to https://github.com/jhipster/generator-jhipster/issues/17990.
  */
-@SuppressWarnings("unused")
 @Repository
-public interface JoueurRepository extends ReactiveCrudRepository<Joueur, Long>, JoueurRepositoryInternal {
-    @Override
-    Mono<Joueur> findOneWithEagerRelationships(Long id);
+public interface JoueurRepository extends JoueurRepositoryWithBagRelationships, JpaRepository<Joueur, Long> {
+    default Optional<Joueur> findOneWithEagerRelationships(Long id) {
+        return this.fetchBagRelationships(this.findById(id));
+    }
 
-    @Override
-    Flux<Joueur> findAllWithEagerRelationships();
+    default List<Joueur> findAllWithEagerRelationships() {
+        return this.fetchBagRelationships(this.findAll());
+    }
 
-    @Override
-    Flux<Joueur> findAllWithEagerRelationships(Pageable page);
-
-    @Query("SELECT * FROM joueur entity WHERE entity.user_id = :id")
-    Flux<Joueur> findByUser(Long id);
-
-    @Query("SELECT * FROM joueur entity WHERE entity.user_id IS NULL")
-    Flux<Joueur> findAllWhereUserIsNull();
-
-    @Query(
-        "SELECT entity.* FROM joueur entity JOIN rel_joueur__equipe joinTable ON entity.id = joinTable.equipe_id WHERE joinTable.equipe_id = :id"
-    )
-    Flux<Joueur> findByEquipe(Long id);
-
-    @Query("SELECT * FROM joueur entity WHERE entity.quartier_id = :id")
-    Flux<Joueur> findByQuartier(Long id);
-
-    @Query("SELECT * FROM joueur entity WHERE entity.quartier_id IS NULL")
-    Flux<Joueur> findAllWhereQuartierIsNull();
-
-    @Override
-    <S extends Joueur> Mono<S> save(S entity);
-
-    @Override
-    Flux<Joueur> findAll();
-
-    @Override
-    Mono<Joueur> findById(Long id);
-
-    @Override
-    Mono<Void> deleteById(Long id);
-}
-
-interface JoueurRepositoryInternal {
-    <S extends Joueur> Mono<S> save(S entity);
-
-    Flux<Joueur> findAllBy(Pageable pageable);
-
-    Flux<Joueur> findAll();
-
-    Mono<Joueur> findById(Long id);
-    // this is not supported at the moment because of https://github.com/jhipster/generator-jhipster/issues/18269
-    // Flux<Joueur> findAllBy(Pageable pageable, Criteria criteria);
-
-    Mono<Joueur> findOneWithEagerRelationships(Long id);
-
-    Flux<Joueur> findAllWithEagerRelationships();
-
-    Flux<Joueur> findAllWithEagerRelationships(Pageable page);
-
-    Mono<Void> deleteById(Long id);
+    default Page<Joueur> findAllWithEagerRelationships(Pageable pageable) {
+        return this.fetchBagRelationships(this.findAll(pageable));
+    }
 }

@@ -11,16 +11,11 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import tech.jhipster.web.util.HeaderUtil;
-import tech.jhipster.web.util.reactive.ResponseUtil;
+import tech.jhipster.web.util.ResponseUtil;
 
 /**
  * REST controller for managing {@link fit.foot.domain.Complexe}.
@@ -51,23 +46,16 @@ public class ComplexeResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/complexes")
-    public Mono<ResponseEntity<Complexe>> createComplexe(@RequestBody Complexe complexe) throws URISyntaxException {
+    public ResponseEntity<Complexe> createComplexe(@RequestBody Complexe complexe) throws URISyntaxException {
         log.debug("REST request to save Complexe : {}", complexe);
         if (complexe.getId() != null) {
             throw new BadRequestAlertException("A new complexe cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        return complexeRepository
-            .save(complexe)
-            .map(result -> {
-                try {
-                    return ResponseEntity
-                        .created(new URI("/api/complexes/" + result.getId()))
-                        .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-                        .body(result);
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+        Complexe result = complexeRepository.save(complexe);
+        return ResponseEntity
+            .created(new URI("/api/complexes/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -81,7 +69,7 @@ public class ComplexeResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/complexes/{id}")
-    public Mono<ResponseEntity<Complexe>> updateComplexe(
+    public ResponseEntity<Complexe> updateComplexe(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestBody Complexe complexe
     ) throws URISyntaxException {
@@ -93,23 +81,15 @@ public class ComplexeResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        return complexeRepository
-            .existsById(id)
-            .flatMap(exists -> {
-                if (!exists) {
-                    return Mono.error(new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound"));
-                }
+        if (!complexeRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
 
-                return complexeRepository
-                    .save(complexe)
-                    .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                    .map(result ->
-                        ResponseEntity
-                            .ok()
-                            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-                            .body(result)
-                    );
-            });
+        Complexe result = complexeRepository.save(complexe);
+        return ResponseEntity
+            .ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, complexe.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -124,7 +104,7 @@ public class ComplexeResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/complexes/{id}", consumes = { "application/json", "application/merge-patch+json" })
-    public Mono<ResponseEntity<Complexe>> partialUpdateComplexe(
+    public ResponseEntity<Complexe> partialUpdateComplexe(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestBody Complexe complexe
     ) throws URISyntaxException {
@@ -136,39 +116,31 @@ public class ComplexeResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        return complexeRepository
-            .existsById(id)
-            .flatMap(exists -> {
-                if (!exists) {
-                    return Mono.error(new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound"));
+        if (!complexeRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        Optional<Complexe> result = complexeRepository
+            .findById(complexe.getId())
+            .map(existingComplexe -> {
+                if (complexe.getNom() != null) {
+                    existingComplexe.setNom(complexe.getNom());
+                }
+                if (complexe.getLongitude() != null) {
+                    existingComplexe.setLongitude(complexe.getLongitude());
+                }
+                if (complexe.getLatitude() != null) {
+                    existingComplexe.setLatitude(complexe.getLatitude());
                 }
 
-                Mono<Complexe> result = complexeRepository
-                    .findById(complexe.getId())
-                    .map(existingComplexe -> {
-                        if (complexe.getNom() != null) {
-                            existingComplexe.setNom(complexe.getNom());
-                        }
-                        if (complexe.getLongitude() != null) {
-                            existingComplexe.setLongitude(complexe.getLongitude());
-                        }
-                        if (complexe.getLatitude() != null) {
-                            existingComplexe.setLatitude(complexe.getLatitude());
-                        }
+                return existingComplexe;
+            })
+            .map(complexeRepository::save);
 
-                        return existingComplexe;
-                    })
-                    .flatMap(complexeRepository::save);
-
-                return result
-                    .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                    .map(res ->
-                        ResponseEntity
-                            .ok()
-                            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, res.getId().toString()))
-                            .body(res)
-                    );
-            });
+        return ResponseUtil.wrapOrNotFound(
+            result,
+            HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, complexe.getId().toString())
+        );
     }
 
     /**
@@ -177,18 +149,8 @@ public class ComplexeResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of complexes in body.
      */
     @GetMapping("/complexes")
-    public Mono<List<Complexe>> getAllComplexes() {
+    public List<Complexe> getAllComplexes() {
         log.debug("REST request to get all Complexes");
-        return complexeRepository.findAll().collectList();
-    }
-
-    /**
-     * {@code GET  /complexes} : get all the complexes as a stream.
-     * @return the {@link Flux} of complexes.
-     */
-    @GetMapping(value = "/complexes", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public Flux<Complexe> getAllComplexesAsStream() {
-        log.debug("REST request to get all Complexes as a stream");
         return complexeRepository.findAll();
     }
 
@@ -199,9 +161,9 @@ public class ComplexeResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the complexe, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/complexes/{id}")
-    public Mono<ResponseEntity<Complexe>> getComplexe(@PathVariable Long id) {
+    public ResponseEntity<Complexe> getComplexe(@PathVariable Long id) {
         log.debug("REST request to get Complexe : {}", id);
-        Mono<Complexe> complexe = complexeRepository.findById(id);
+        Optional<Complexe> complexe = complexeRepository.findById(id);
         return ResponseUtil.wrapOrNotFound(complexe);
     }
 
@@ -212,17 +174,12 @@ public class ComplexeResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/complexes/{id}")
-    public Mono<ResponseEntity<Void>> deleteComplexe(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteComplexe(@PathVariable Long id) {
         log.debug("REST request to delete Complexe : {}", id);
-        return complexeRepository
-            .deleteById(id)
-            .then(
-                Mono.just(
-                    ResponseEntity
-                        .noContent()
-                        .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
-                        .build()
-                )
-            );
+        complexeRepository.deleteById(id);
+        return ResponseEntity
+            .noContent()
+            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
+            .build();
     }
 }

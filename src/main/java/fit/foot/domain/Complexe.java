@@ -4,50 +4,43 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import javax.persistence.*;
 
 /**
  * A Complexe.
  */
-@Table("complexe")
+@Entity
+@Table(name = "complexe")
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class Complexe implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Column("nom")
+    @Column(name = "nom")
     private String nom;
 
-    @Column("longitude")
+    @Column(name = "longitude")
     private Double longitude;
 
-    @Column("latitude")
+    @Column(name = "latitude")
     private Double latitude;
 
-    @Transient
+    @OneToMany(mappedBy = "complexe")
     @JsonIgnoreProperties(value = { "reservations", "annonce", "complexe" }, allowSetters = true)
     private Set<Terrain> terrains = new HashSet<>();
 
-    @Transient
-    @JsonIgnoreProperties(value = { "joueurs", "complexes", "ville" }, allowSetters = true)
+    @ManyToOne
+    @JsonIgnoreProperties(value = { "complexes", "joueurs", "ville" }, allowSetters = true)
     private Quartier quartier;
 
-    @Transient
+    @ManyToOne
     @JsonIgnoreProperties(value = { "user", "complexes" }, allowSetters = true)
     private Proprietaire proprietaire;
-
-    @Column("quartier_id")
-    private Long quartierId;
-
-    @Column("proprietaire_id")
-    private Long proprietaireId;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -140,7 +133,6 @@ public class Complexe implements Serializable {
 
     public void setQuartier(Quartier quartier) {
         this.quartier = quartier;
-        this.quartierId = quartier != null ? quartier.getId() : null;
     }
 
     public Complexe quartier(Quartier quartier) {
@@ -154,28 +146,11 @@ public class Complexe implements Serializable {
 
     public void setProprietaire(Proprietaire proprietaire) {
         this.proprietaire = proprietaire;
-        this.proprietaireId = proprietaire != null ? proprietaire.getId() : null;
     }
 
     public Complexe proprietaire(Proprietaire proprietaire) {
         this.setProprietaire(proprietaire);
         return this;
-    }
-
-    public Long getQuartierId() {
-        return this.quartierId;
-    }
-
-    public void setQuartierId(Long quartier) {
-        this.quartierId = quartier;
-    }
-
-    public Long getProprietaireId() {
-        return this.proprietaireId;
-    }
-
-    public void setProprietaireId(Long proprietaire) {
-        this.proprietaireId = proprietaire;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

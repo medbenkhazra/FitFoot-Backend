@@ -11,16 +11,11 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import tech.jhipster.web.util.HeaderUtil;
-import tech.jhipster.web.util.reactive.ResponseUtil;
+import tech.jhipster.web.util.ResponseUtil;
 
 /**
  * REST controller for managing {@link fit.foot.domain.Joueur}.
@@ -51,23 +46,16 @@ public class JoueurResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/joueurs")
-    public Mono<ResponseEntity<Joueur>> createJoueur(@RequestBody Joueur joueur) throws URISyntaxException {
+    public ResponseEntity<Joueur> createJoueur(@RequestBody Joueur joueur) throws URISyntaxException {
         log.debug("REST request to save Joueur : {}", joueur);
         if (joueur.getId() != null) {
             throw new BadRequestAlertException("A new joueur cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        return joueurRepository
-            .save(joueur)
-            .map(result -> {
-                try {
-                    return ResponseEntity
-                        .created(new URI("/api/joueurs/" + result.getId()))
-                        .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-                        .body(result);
-                } catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+        Joueur result = joueurRepository.save(joueur);
+        return ResponseEntity
+            .created(new URI("/api/joueurs/" + result.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -81,10 +69,8 @@ public class JoueurResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/joueurs/{id}")
-    public Mono<ResponseEntity<Joueur>> updateJoueur(
-        @PathVariable(value = "id", required = false) final Long id,
-        @RequestBody Joueur joueur
-    ) throws URISyntaxException {
+    public ResponseEntity<Joueur> updateJoueur(@PathVariable(value = "id", required = false) final Long id, @RequestBody Joueur joueur)
+        throws URISyntaxException {
         log.debug("REST request to update Joueur : {}, {}", id, joueur);
         if (joueur.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
@@ -93,23 +79,15 @@ public class JoueurResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        return joueurRepository
-            .existsById(id)
-            .flatMap(exists -> {
-                if (!exists) {
-                    return Mono.error(new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound"));
-                }
+        if (!joueurRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
 
-                return joueurRepository
-                    .save(joueur)
-                    .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                    .map(result ->
-                        ResponseEntity
-                            .ok()
-                            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-                            .body(result)
-                    );
-            });
+        Joueur result = joueurRepository.save(joueur);
+        return ResponseEntity
+            .ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, joueur.getId().toString()))
+            .body(result);
     }
 
     /**
@@ -124,7 +102,7 @@ public class JoueurResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/joueurs/{id}", consumes = { "application/json", "application/merge-patch+json" })
-    public Mono<ResponseEntity<Joueur>> partialUpdateJoueur(
+    public ResponseEntity<Joueur> partialUpdateJoueur(
         @PathVariable(value = "id", required = false) final Long id,
         @RequestBody Joueur joueur
     ) throws URISyntaxException {
@@ -136,42 +114,34 @@ public class JoueurResource {
             throw new BadRequestAlertException("Invalid ID", ENTITY_NAME, "idinvalid");
         }
 
-        return joueurRepository
-            .existsById(id)
-            .flatMap(exists -> {
-                if (!exists) {
-                    return Mono.error(new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound"));
+        if (!joueurRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        Optional<Joueur> result = joueurRepository
+            .findById(joueur.getId())
+            .map(existingJoueur -> {
+                if (joueur.getBirthDay() != null) {
+                    existingJoueur.setBirthDay(joueur.getBirthDay());
+                }
+                if (joueur.getGender() != null) {
+                    existingJoueur.setGender(joueur.getGender());
+                }
+                if (joueur.getAvatar() != null) {
+                    existingJoueur.setAvatar(joueur.getAvatar());
+                }
+                if (joueur.getAvatarContentType() != null) {
+                    existingJoueur.setAvatarContentType(joueur.getAvatarContentType());
                 }
 
-                Mono<Joueur> result = joueurRepository
-                    .findById(joueur.getId())
-                    .map(existingJoueur -> {
-                        if (joueur.getBirthDay() != null) {
-                            existingJoueur.setBirthDay(joueur.getBirthDay());
-                        }
-                        if (joueur.getGender() != null) {
-                            existingJoueur.setGender(joueur.getGender());
-                        }
-                        if (joueur.getAvatar() != null) {
-                            existingJoueur.setAvatar(joueur.getAvatar());
-                        }
-                        if (joueur.getAvatarContentType() != null) {
-                            existingJoueur.setAvatarContentType(joueur.getAvatarContentType());
-                        }
+                return existingJoueur;
+            })
+            .map(joueurRepository::save);
 
-                        return existingJoueur;
-                    })
-                    .flatMap(joueurRepository::save);
-
-                return result
-                    .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                    .map(res ->
-                        ResponseEntity
-                            .ok()
-                            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, res.getId().toString()))
-                            .body(res)
-                    );
-            });
+        return ResponseUtil.wrapOrNotFound(
+            result,
+            HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, joueur.getId().toString())
+        );
     }
 
     /**
@@ -181,23 +151,13 @@ public class JoueurResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of joueurs in body.
      */
     @GetMapping("/joueurs")
-    public Mono<List<Joueur>> getAllJoueurs(@RequestParam(required = false, defaultValue = "false") boolean eagerload) {
+    public List<Joueur> getAllJoueurs(@RequestParam(required = false, defaultValue = "false") boolean eagerload) {
         log.debug("REST request to get all Joueurs");
         if (eagerload) {
-            return joueurRepository.findAllWithEagerRelationships().collectList();
+            return joueurRepository.findAllWithEagerRelationships();
         } else {
-            return joueurRepository.findAll().collectList();
+            return joueurRepository.findAll();
         }
-    }
-
-    /**
-     * {@code GET  /joueurs} : get all the joueurs as a stream.
-     * @return the {@link Flux} of joueurs.
-     */
-    @GetMapping(value = "/joueurs", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public Flux<Joueur> getAllJoueursAsStream() {
-        log.debug("REST request to get all Joueurs as a stream");
-        return joueurRepository.findAll();
     }
 
     /**
@@ -207,9 +167,9 @@ public class JoueurResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the joueur, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/joueurs/{id}")
-    public Mono<ResponseEntity<Joueur>> getJoueur(@PathVariable Long id) {
+    public ResponseEntity<Joueur> getJoueur(@PathVariable Long id) {
         log.debug("REST request to get Joueur : {}", id);
-        Mono<Joueur> joueur = joueurRepository.findOneWithEagerRelationships(id);
+        Optional<Joueur> joueur = joueurRepository.findOneWithEagerRelationships(id);
         return ResponseUtil.wrapOrNotFound(joueur);
     }
 
@@ -220,17 +180,12 @@ public class JoueurResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/joueurs/{id}")
-    public Mono<ResponseEntity<Void>> deleteJoueur(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteJoueur(@PathVariable Long id) {
         log.debug("REST request to delete Joueur : {}", id);
-        return joueurRepository
-            .deleteById(id)
-            .then(
-                Mono.just(
-                    ResponseEntity
-                        .noContent()
-                        .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
-                        .build()
-                )
-            );
+        joueurRepository.deleteById(id);
+        return ResponseEntity
+            .noContent()
+            .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
+            .build();
     }
 }

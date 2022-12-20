@@ -2,30 +2,30 @@ package fit.foot.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import fit.foot.IntegrationTest;
 import fit.foot.domain.Quartier;
-import fit.foot.repository.EntityManager;
 import fit.foot.repository.QuartierRepository;
-import java.time.Duration;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
-import org.junit.jupiter.api.AfterEach;
+import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Integration tests for the {@link QuartierResource} REST controller.
  */
 @IntegrationTest
-@AutoConfigureWebTestClient(timeout = IntegrationTest.DEFAULT_ENTITY_TIMEOUT)
+@AutoConfigureMockMvc
 @WithMockUser
 class QuartierResourceIT {
 
@@ -45,7 +45,7 @@ class QuartierResourceIT {
     private EntityManager em;
 
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc restQuartierMockMvc;
 
     private Quartier quartier;
 
@@ -71,242 +71,174 @@ class QuartierResourceIT {
         return quartier;
     }
 
-    public static void deleteEntities(EntityManager em) {
-        try {
-            em.deleteAll(Quartier.class).block();
-        } catch (Exception e) {
-            // It can fail, if other entities are still referring this - it will be removed later.
-        }
-    }
-
-    @AfterEach
-    public void cleanup() {
-        deleteEntities(em);
-    }
-
     @BeforeEach
     public void initTest() {
-        deleteEntities(em);
         quartier = createEntity(em);
     }
 
     @Test
+    @Transactional
     void createQuartier() throws Exception {
-        int databaseSizeBeforeCreate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeCreate = quartierRepository.findAll().size();
         // Create the Quartier
-        webTestClient
-            .post()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(quartier))
-            .exchange()
-            .expectStatus()
-            .isCreated();
+        restQuartierMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(quartier)))
+            .andExpect(status().isCreated());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeCreate + 1);
         Quartier testQuartier = quartierList.get(quartierList.size() - 1);
         assertThat(testQuartier.getNom()).isEqualTo(DEFAULT_NOM);
     }
 
     @Test
+    @Transactional
     void createQuartierWithExistingId() throws Exception {
         // Create the Quartier with an existing ID
         quartier.setId(1L);
 
-        int databaseSizeBeforeCreate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeCreate = quartierRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
-        webTestClient
-            .post()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(quartier))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restQuartierMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(quartier)))
+            .andExpect(status().isBadRequest());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
-    void getAllQuartiersAsStream() {
+    @Transactional
+    void getAllQuartiers() throws Exception {
         // Initialize the database
-        quartierRepository.save(quartier).block();
-
-        List<Quartier> quartierList = webTestClient
-            .get()
-            .uri(ENTITY_API_URL)
-            .accept(MediaType.APPLICATION_NDJSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentTypeCompatibleWith(MediaType.APPLICATION_NDJSON)
-            .returnResult(Quartier.class)
-            .getResponseBody()
-            .filter(quartier::equals)
-            .collectList()
-            .block(Duration.ofSeconds(5));
-
-        assertThat(quartierList).isNotNull();
-        assertThat(quartierList).hasSize(1);
-        Quartier testQuartier = quartierList.get(0);
-        assertThat(testQuartier.getNom()).isEqualTo(DEFAULT_NOM);
-    }
-
-    @Test
-    void getAllQuartiers() {
-        // Initialize the database
-        quartierRepository.save(quartier).block();
+        quartierRepository.saveAndFlush(quartier);
 
         // Get all the quartierList
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL + "?sort=id,desc")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.[*].id")
-            .value(hasItem(quartier.getId().intValue()))
-            .jsonPath("$.[*].nom")
-            .value(hasItem(DEFAULT_NOM));
+        restQuartierMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(quartier.getId().intValue())))
+            .andExpect(jsonPath("$.[*].nom").value(hasItem(DEFAULT_NOM)));
     }
 
     @Test
-    void getQuartier() {
+    @Transactional
+    void getQuartier() throws Exception {
         // Initialize the database
-        quartierRepository.save(quartier).block();
+        quartierRepository.saveAndFlush(quartier);
 
         // Get the quartier
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL_ID, quartier.getId())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.id")
-            .value(is(quartier.getId().intValue()))
-            .jsonPath("$.nom")
-            .value(is(DEFAULT_NOM));
+        restQuartierMockMvc
+            .perform(get(ENTITY_API_URL_ID, quartier.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.id").value(quartier.getId().intValue()))
+            .andExpect(jsonPath("$.nom").value(DEFAULT_NOM));
     }
 
     @Test
-    void getNonExistingQuartier() {
+    @Transactional
+    void getNonExistingQuartier() throws Exception {
         // Get the quartier
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL_ID, Long.MAX_VALUE)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isNotFound();
+        restQuartierMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
     }
 
     @Test
+    @Transactional
     void putExistingQuartier() throws Exception {
         // Initialize the database
-        quartierRepository.save(quartier).block();
+        quartierRepository.saveAndFlush(quartier);
 
-        int databaseSizeBeforeUpdate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = quartierRepository.findAll().size();
 
         // Update the quartier
-        Quartier updatedQuartier = quartierRepository.findById(quartier.getId()).block();
+        Quartier updatedQuartier = quartierRepository.findById(quartier.getId()).get();
+        // Disconnect from session so that the updates on updatedQuartier are not directly saved in db
+        em.detach(updatedQuartier);
         updatedQuartier.nom(UPDATED_NOM);
 
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, updatedQuartier.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(updatedQuartier))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restQuartierMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, updatedQuartier.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(updatedQuartier))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeUpdate);
         Quartier testQuartier = quartierList.get(quartierList.size() - 1);
         assertThat(testQuartier.getNom()).isEqualTo(UPDATED_NOM);
     }
 
     @Test
+    @Transactional
     void putNonExistingQuartier() throws Exception {
-        int databaseSizeBeforeUpdate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = quartierRepository.findAll().size();
         quartier.setId(count.incrementAndGet());
 
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, quartier.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(quartier))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restQuartierMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, quartier.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(quartier))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void putWithIdMismatchQuartier() throws Exception {
-        int databaseSizeBeforeUpdate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = quartierRepository.findAll().size();
         quartier.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, count.incrementAndGet())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(quartier))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restQuartierMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, count.incrementAndGet())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(quartier))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void putWithMissingIdPathParamQuartier() throws Exception {
-        int databaseSizeBeforeUpdate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = quartierRepository.findAll().size();
         quartier.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(quartier))
-            .exchange()
-            .expectStatus()
-            .isEqualTo(405);
+        restQuartierMockMvc
+            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(quartier)))
+            .andExpect(status().isMethodNotAllowed());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void partialUpdateQuartierWithPatch() throws Exception {
         // Initialize the database
-        quartierRepository.save(quartier).block();
+        quartierRepository.saveAndFlush(quartier);
 
-        int databaseSizeBeforeUpdate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = quartierRepository.findAll().size();
 
         // Update the quartier using partial update
         Quartier partialUpdatedQuartier = new Quartier();
@@ -314,28 +246,28 @@ class QuartierResourceIT {
 
         partialUpdatedQuartier.nom(UPDATED_NOM);
 
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, partialUpdatedQuartier.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(partialUpdatedQuartier))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restQuartierMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedQuartier.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedQuartier))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeUpdate);
         Quartier testQuartier = quartierList.get(quartierList.size() - 1);
         assertThat(testQuartier.getNom()).isEqualTo(UPDATED_NOM);
     }
 
     @Test
+    @Transactional
     void fullUpdateQuartierWithPatch() throws Exception {
         // Initialize the database
-        quartierRepository.save(quartier).block();
+        quartierRepository.saveAndFlush(quartier);
 
-        int databaseSizeBeforeUpdate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = quartierRepository.findAll().size();
 
         // Update the quartier using partial update
         Quartier partialUpdatedQuartier = new Quartier();
@@ -343,100 +275,92 @@ class QuartierResourceIT {
 
         partialUpdatedQuartier.nom(UPDATED_NOM);
 
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, partialUpdatedQuartier.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(partialUpdatedQuartier))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restQuartierMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedQuartier.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedQuartier))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeUpdate);
         Quartier testQuartier = quartierList.get(quartierList.size() - 1);
         assertThat(testQuartier.getNom()).isEqualTo(UPDATED_NOM);
     }
 
     @Test
+    @Transactional
     void patchNonExistingQuartier() throws Exception {
-        int databaseSizeBeforeUpdate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = quartierRepository.findAll().size();
         quartier.setId(count.incrementAndGet());
 
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, quartier.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(quartier))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restQuartierMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, quartier.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(quartier))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void patchWithIdMismatchQuartier() throws Exception {
-        int databaseSizeBeforeUpdate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = quartierRepository.findAll().size();
         quartier.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, count.incrementAndGet())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(quartier))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restQuartierMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, count.incrementAndGet())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(quartier))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void patchWithMissingIdPathParamQuartier() throws Exception {
-        int databaseSizeBeforeUpdate = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = quartierRepository.findAll().size();
         quartier.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(quartier))
-            .exchange()
-            .expectStatus()
-            .isEqualTo(405);
+        restQuartierMockMvc
+            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(TestUtil.convertObjectToJsonBytes(quartier)))
+            .andExpect(status().isMethodNotAllowed());
 
         // Validate the Quartier in the database
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
-    void deleteQuartier() {
+    @Transactional
+    void deleteQuartier() throws Exception {
         // Initialize the database
-        quartierRepository.save(quartier).block();
+        quartierRepository.saveAndFlush(quartier);
 
-        int databaseSizeBeforeDelete = quartierRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeDelete = quartierRepository.findAll().size();
 
         // Delete the quartier
-        webTestClient
-            .delete()
-            .uri(ENTITY_API_URL_ID, quartier.getId())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isNoContent();
+        restQuartierMockMvc
+            .perform(delete(ENTITY_API_URL_ID, quartier.getId()).accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        List<Quartier> quartierList = quartierRepository.findAll().collectList().block();
+        List<Quartier> quartierList = quartierRepository.findAll();
         assertThat(quartierList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }

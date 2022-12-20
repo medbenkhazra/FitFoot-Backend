@@ -4,39 +4,35 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
+import javax.persistence.*;
 
 /**
  * A Reservation.
  */
-@Table("reservation")
+@Entity
+@Table(name = "reservation")
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class Reservation implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column("id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    @Column("date")
+    @Column(name = "date")
     private LocalDate date;
 
-    @Column("heure_debut")
+    @Column(name = "heure_debut")
     private ZonedDateTime heureDebut;
 
-    @Column("heure_fin")
+    @Column(name = "heure_fin")
     private ZonedDateTime heureFin;
 
-    @Transient
+    @ManyToOne
     @JsonIgnoreProperties(value = { "reservations", "annonce", "complexe" }, allowSetters = true)
     private Terrain terrain;
-
-    @Column("terrain_id")
-    private Long terrainId;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
 
@@ -98,20 +94,11 @@ public class Reservation implements Serializable {
 
     public void setTerrain(Terrain terrain) {
         this.terrain = terrain;
-        this.terrainId = terrain != null ? terrain.getId() : null;
     }
 
     public Reservation terrain(Terrain terrain) {
         this.setTerrain(terrain);
         return this;
-    }
-
-    public Long getTerrainId() {
-        return this.terrainId;
-    }
-
-    public void setTerrainId(Long terrain) {
-        this.terrainId = terrain;
     }
 
     // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here

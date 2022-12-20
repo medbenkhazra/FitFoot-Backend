@@ -1,14 +1,14 @@
 entity User {
 }
 
-entity Joueur {	
-birthDay LocalDate 
+entity Joueur {
+birthDay LocalDate
 gender GENDER
 avatar ImageBlob
 }
 
 enum GENDER {
-MALE, FEMALE 
+MALE, FEMALE
 }
 enum STATUS {
 OUVERT, FEREME , ENCOURS
@@ -19,7 +19,7 @@ entity Equipe {
 entity Annonce {
 	description String
     heureDebut ZonedDateTime
-    heureFin ZonedDateTime 
+    heureFin ZonedDateTime
     duree Integer
     validation Boolean
     nombreParEquipe Integer
@@ -29,22 +29,22 @@ entity Proprietaire {
 	avatar ImageBlob
 	cin String
     rib String
-    numTel String 
+    numTel String
 }
 entity Quartier {
     nom String
 }
 entity Complexe {
-	nom String 
+	nom String
     longitude Double
     latitude Double
 }
 entity Terrain {
-	nom String 
+	nom String
     capaciteParEquipe Integer
 }
 entity Ville {
-nom String 
+nom String
 }
 entity Reservation {
 date LocalDate

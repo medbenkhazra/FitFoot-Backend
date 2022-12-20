@@ -2,30 +2,30 @@ package fit.foot.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import fit.foot.IntegrationTest;
 import fit.foot.domain.Ville;
-import fit.foot.repository.EntityManager;
 import fit.foot.repository.VilleRepository;
-import java.time.Duration;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
-import org.junit.jupiter.api.AfterEach;
+import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Integration tests for the {@link VilleResource} REST controller.
  */
 @IntegrationTest
-@AutoConfigureWebTestClient(timeout = IntegrationTest.DEFAULT_ENTITY_TIMEOUT)
+@AutoConfigureMockMvc
 @WithMockUser
 class VilleResourceIT {
 
@@ -45,7 +45,7 @@ class VilleResourceIT {
     private EntityManager em;
 
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc restVilleMockMvc;
 
     private Ville ville;
 
@@ -71,242 +71,174 @@ class VilleResourceIT {
         return ville;
     }
 
-    public static void deleteEntities(EntityManager em) {
-        try {
-            em.deleteAll(Ville.class).block();
-        } catch (Exception e) {
-            // It can fail, if other entities are still referring this - it will be removed later.
-        }
-    }
-
-    @AfterEach
-    public void cleanup() {
-        deleteEntities(em);
-    }
-
     @BeforeEach
     public void initTest() {
-        deleteEntities(em);
         ville = createEntity(em);
     }
 
     @Test
+    @Transactional
     void createVille() throws Exception {
-        int databaseSizeBeforeCreate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeCreate = villeRepository.findAll().size();
         // Create the Ville
-        webTestClient
-            .post()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(ville))
-            .exchange()
-            .expectStatus()
-            .isCreated();
+        restVilleMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(ville)))
+            .andExpect(status().isCreated());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeCreate + 1);
         Ville testVille = villeList.get(villeList.size() - 1);
         assertThat(testVille.getNom()).isEqualTo(DEFAULT_NOM);
     }
 
     @Test
+    @Transactional
     void createVilleWithExistingId() throws Exception {
         // Create the Ville with an existing ID
         ville.setId(1L);
 
-        int databaseSizeBeforeCreate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeCreate = villeRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
-        webTestClient
-            .post()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(ville))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restVilleMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(ville)))
+            .andExpect(status().isBadRequest());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
-    void getAllVillesAsStream() {
+    @Transactional
+    void getAllVilles() throws Exception {
         // Initialize the database
-        villeRepository.save(ville).block();
-
-        List<Ville> villeList = webTestClient
-            .get()
-            .uri(ENTITY_API_URL)
-            .accept(MediaType.APPLICATION_NDJSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentTypeCompatibleWith(MediaType.APPLICATION_NDJSON)
-            .returnResult(Ville.class)
-            .getResponseBody()
-            .filter(ville::equals)
-            .collectList()
-            .block(Duration.ofSeconds(5));
-
-        assertThat(villeList).isNotNull();
-        assertThat(villeList).hasSize(1);
-        Ville testVille = villeList.get(0);
-        assertThat(testVille.getNom()).isEqualTo(DEFAULT_NOM);
-    }
-
-    @Test
-    void getAllVilles() {
-        // Initialize the database
-        villeRepository.save(ville).block();
+        villeRepository.saveAndFlush(ville);
 
         // Get all the villeList
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL + "?sort=id,desc")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.[*].id")
-            .value(hasItem(ville.getId().intValue()))
-            .jsonPath("$.[*].nom")
-            .value(hasItem(DEFAULT_NOM));
+        restVilleMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(ville.getId().intValue())))
+            .andExpect(jsonPath("$.[*].nom").value(hasItem(DEFAULT_NOM)));
     }
 
     @Test
-    void getVille() {
+    @Transactional
+    void getVille() throws Exception {
         // Initialize the database
-        villeRepository.save(ville).block();
+        villeRepository.saveAndFlush(ville);
 
         // Get the ville
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL_ID, ville.getId())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.id")
-            .value(is(ville.getId().intValue()))
-            .jsonPath("$.nom")
-            .value(is(DEFAULT_NOM));
+        restVilleMockMvc
+            .perform(get(ENTITY_API_URL_ID, ville.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.id").value(ville.getId().intValue()))
+            .andExpect(jsonPath("$.nom").value(DEFAULT_NOM));
     }
 
     @Test
-    void getNonExistingVille() {
+    @Transactional
+    void getNonExistingVille() throws Exception {
         // Get the ville
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL_ID, Long.MAX_VALUE)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isNotFound();
+        restVilleMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
     }
 
     @Test
+    @Transactional
     void putExistingVille() throws Exception {
         // Initialize the database
-        villeRepository.save(ville).block();
+        villeRepository.saveAndFlush(ville);
 
-        int databaseSizeBeforeUpdate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = villeRepository.findAll().size();
 
         // Update the ville
-        Ville updatedVille = villeRepository.findById(ville.getId()).block();
+        Ville updatedVille = villeRepository.findById(ville.getId()).get();
+        // Disconnect from session so that the updates on updatedVille are not directly saved in db
+        em.detach(updatedVille);
         updatedVille.nom(UPDATED_NOM);
 
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, updatedVille.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(updatedVille))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restVilleMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, updatedVille.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(updatedVille))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeUpdate);
         Ville testVille = villeList.get(villeList.size() - 1);
         assertThat(testVille.getNom()).isEqualTo(UPDATED_NOM);
     }
 
     @Test
+    @Transactional
     void putNonExistingVille() throws Exception {
-        int databaseSizeBeforeUpdate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = villeRepository.findAll().size();
         ville.setId(count.incrementAndGet());
 
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, ville.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(ville))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restVilleMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, ville.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(ville))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void putWithIdMismatchVille() throws Exception {
-        int databaseSizeBeforeUpdate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = villeRepository.findAll().size();
         ville.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, count.incrementAndGet())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(ville))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restVilleMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, count.incrementAndGet())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(ville))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void putWithMissingIdPathParamVille() throws Exception {
-        int databaseSizeBeforeUpdate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = villeRepository.findAll().size();
         ville.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(ville))
-            .exchange()
-            .expectStatus()
-            .isEqualTo(405);
+        restVilleMockMvc
+            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(ville)))
+            .andExpect(status().isMethodNotAllowed());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void partialUpdateVilleWithPatch() throws Exception {
         // Initialize the database
-        villeRepository.save(ville).block();
+        villeRepository.saveAndFlush(ville);
 
-        int databaseSizeBeforeUpdate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = villeRepository.findAll().size();
 
         // Update the ville using partial update
         Ville partialUpdatedVille = new Ville();
@@ -314,28 +246,28 @@ class VilleResourceIT {
 
         partialUpdatedVille.nom(UPDATED_NOM);
 
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, partialUpdatedVille.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(partialUpdatedVille))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restVilleMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedVille.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedVille))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeUpdate);
         Ville testVille = villeList.get(villeList.size() - 1);
         assertThat(testVille.getNom()).isEqualTo(UPDATED_NOM);
     }
 
     @Test
+    @Transactional
     void fullUpdateVilleWithPatch() throws Exception {
         // Initialize the database
-        villeRepository.save(ville).block();
+        villeRepository.saveAndFlush(ville);
 
-        int databaseSizeBeforeUpdate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = villeRepository.findAll().size();
 
         // Update the ville using partial update
         Ville partialUpdatedVille = new Ville();
@@ -343,100 +275,92 @@ class VilleResourceIT {
 
         partialUpdatedVille.nom(UPDATED_NOM);
 
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, partialUpdatedVille.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(partialUpdatedVille))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restVilleMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedVille.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedVille))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeUpdate);
         Ville testVille = villeList.get(villeList.size() - 1);
         assertThat(testVille.getNom()).isEqualTo(UPDATED_NOM);
     }
 
     @Test
+    @Transactional
     void patchNonExistingVille() throws Exception {
-        int databaseSizeBeforeUpdate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = villeRepository.findAll().size();
         ville.setId(count.incrementAndGet());
 
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, ville.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(ville))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restVilleMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, ville.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(ville))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void patchWithIdMismatchVille() throws Exception {
-        int databaseSizeBeforeUpdate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = villeRepository.findAll().size();
         ville.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, count.incrementAndGet())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(ville))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restVilleMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, count.incrementAndGet())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(ville))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void patchWithMissingIdPathParamVille() throws Exception {
-        int databaseSizeBeforeUpdate = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = villeRepository.findAll().size();
         ville.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(ville))
-            .exchange()
-            .expectStatus()
-            .isEqualTo(405);
+        restVilleMockMvc
+            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(TestUtil.convertObjectToJsonBytes(ville)))
+            .andExpect(status().isMethodNotAllowed());
 
         // Validate the Ville in the database
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
-    void deleteVille() {
+    @Transactional
+    void deleteVille() throws Exception {
         // Initialize the database
-        villeRepository.save(ville).block();
+        villeRepository.saveAndFlush(ville);
 
-        int databaseSizeBeforeDelete = villeRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeDelete = villeRepository.findAll().size();
 
         // Delete the ville
-        webTestClient
-            .delete()
-            .uri(ENTITY_API_URL_ID, ville.getId())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isNoContent();
+        restVilleMockMvc
+            .perform(delete(ENTITY_API_URL_ID, ville.getId()).accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        List<Ville> villeList = villeRepository.findAll().collectList().block();
+        List<Ville> villeList = villeRepository.findAll();
         assertThat(villeList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }

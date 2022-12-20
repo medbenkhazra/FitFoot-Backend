@@ -2,30 +2,30 @@ package fit.foot.web.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import fit.foot.IntegrationTest;
 import fit.foot.domain.Terrain;
-import fit.foot.repository.EntityManager;
 import fit.foot.repository.TerrainRepository;
-import java.time.Duration;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
-import org.junit.jupiter.api.AfterEach;
+import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Integration tests for the {@link TerrainResource} REST controller.
  */
 @IntegrationTest
-@AutoConfigureWebTestClient(timeout = IntegrationTest.DEFAULT_ENTITY_TIMEOUT)
+@AutoConfigureMockMvc
 @WithMockUser
 class TerrainResourceIT {
 
@@ -48,7 +48,7 @@ class TerrainResourceIT {
     private EntityManager em;
 
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc restTerrainMockMvc;
 
     private Terrain terrain;
 
@@ -74,40 +74,22 @@ class TerrainResourceIT {
         return terrain;
     }
 
-    public static void deleteEntities(EntityManager em) {
-        try {
-            em.deleteAll(Terrain.class).block();
-        } catch (Exception e) {
-            // It can fail, if other entities are still referring this - it will be removed later.
-        }
-    }
-
-    @AfterEach
-    public void cleanup() {
-        deleteEntities(em);
-    }
-
     @BeforeEach
     public void initTest() {
-        deleteEntities(em);
         terrain = createEntity(em);
     }
 
     @Test
+    @Transactional
     void createTerrain() throws Exception {
-        int databaseSizeBeforeCreate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeCreate = terrainRepository.findAll().size();
         // Create the Terrain
-        webTestClient
-            .post()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(terrain))
-            .exchange()
-            .expectStatus()
-            .isCreated();
+        restTerrainMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(terrain)))
+            .andExpect(status().isCreated());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeCreate + 1);
         Terrain testTerrain = terrainList.get(terrainList.size() - 1);
         assertThat(testTerrain.getNom()).isEqualTo(DEFAULT_NOM);
@@ -115,136 +97,86 @@ class TerrainResourceIT {
     }
 
     @Test
+    @Transactional
     void createTerrainWithExistingId() throws Exception {
         // Create the Terrain with an existing ID
         terrain.setId(1L);
 
-        int databaseSizeBeforeCreate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeCreate = terrainRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
-        webTestClient
-            .post()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(terrain))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restTerrainMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(terrain)))
+            .andExpect(status().isBadRequest());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
-    void getAllTerrainsAsStream() {
+    @Transactional
+    void getAllTerrains() throws Exception {
         // Initialize the database
-        terrainRepository.save(terrain).block();
-
-        List<Terrain> terrainList = webTestClient
-            .get()
-            .uri(ENTITY_API_URL)
-            .accept(MediaType.APPLICATION_NDJSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentTypeCompatibleWith(MediaType.APPLICATION_NDJSON)
-            .returnResult(Terrain.class)
-            .getResponseBody()
-            .filter(terrain::equals)
-            .collectList()
-            .block(Duration.ofSeconds(5));
-
-        assertThat(terrainList).isNotNull();
-        assertThat(terrainList).hasSize(1);
-        Terrain testTerrain = terrainList.get(0);
-        assertThat(testTerrain.getNom()).isEqualTo(DEFAULT_NOM);
-        assertThat(testTerrain.getCapaciteParEquipe()).isEqualTo(DEFAULT_CAPACITE_PAR_EQUIPE);
-    }
-
-    @Test
-    void getAllTerrains() {
-        // Initialize the database
-        terrainRepository.save(terrain).block();
+        terrainRepository.saveAndFlush(terrain);
 
         // Get all the terrainList
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL + "?sort=id,desc")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.[*].id")
-            .value(hasItem(terrain.getId().intValue()))
-            .jsonPath("$.[*].nom")
-            .value(hasItem(DEFAULT_NOM))
-            .jsonPath("$.[*].capaciteParEquipe")
-            .value(hasItem(DEFAULT_CAPACITE_PAR_EQUIPE));
+        restTerrainMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(terrain.getId().intValue())))
+            .andExpect(jsonPath("$.[*].nom").value(hasItem(DEFAULT_NOM)))
+            .andExpect(jsonPath("$.[*].capaciteParEquipe").value(hasItem(DEFAULT_CAPACITE_PAR_EQUIPE)));
     }
 
     @Test
-    void getTerrain() {
+    @Transactional
+    void getTerrain() throws Exception {
         // Initialize the database
-        terrainRepository.save(terrain).block();
+        terrainRepository.saveAndFlush(terrain);
 
         // Get the terrain
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL_ID, terrain.getId())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.id")
-            .value(is(terrain.getId().intValue()))
-            .jsonPath("$.nom")
-            .value(is(DEFAULT_NOM))
-            .jsonPath("$.capaciteParEquipe")
-            .value(is(DEFAULT_CAPACITE_PAR_EQUIPE));
+        restTerrainMockMvc
+            .perform(get(ENTITY_API_URL_ID, terrain.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.id").value(terrain.getId().intValue()))
+            .andExpect(jsonPath("$.nom").value(DEFAULT_NOM))
+            .andExpect(jsonPath("$.capaciteParEquipe").value(DEFAULT_CAPACITE_PAR_EQUIPE));
     }
 
     @Test
-    void getNonExistingTerrain() {
+    @Transactional
+    void getNonExistingTerrain() throws Exception {
         // Get the terrain
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL_ID, Long.MAX_VALUE)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isNotFound();
+        restTerrainMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
     }
 
     @Test
+    @Transactional
     void putExistingTerrain() throws Exception {
         // Initialize the database
-        terrainRepository.save(terrain).block();
+        terrainRepository.saveAndFlush(terrain);
 
-        int databaseSizeBeforeUpdate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = terrainRepository.findAll().size();
 
         // Update the terrain
-        Terrain updatedTerrain = terrainRepository.findById(terrain.getId()).block();
+        Terrain updatedTerrain = terrainRepository.findById(terrain.getId()).get();
+        // Disconnect from session so that the updates on updatedTerrain are not directly saved in db
+        em.detach(updatedTerrain);
         updatedTerrain.nom(UPDATED_NOM).capaciteParEquipe(UPDATED_CAPACITE_PAR_EQUIPE);
 
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, updatedTerrain.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(updatedTerrain))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restTerrainMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, updatedTerrain.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(updatedTerrain))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeUpdate);
         Terrain testTerrain = terrainList.get(terrainList.size() - 1);
         assertThat(testTerrain.getNom()).isEqualTo(UPDATED_NOM);
@@ -252,71 +184,68 @@ class TerrainResourceIT {
     }
 
     @Test
+    @Transactional
     void putNonExistingTerrain() throws Exception {
-        int databaseSizeBeforeUpdate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = terrainRepository.findAll().size();
         terrain.setId(count.incrementAndGet());
 
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, terrain.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(terrain))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restTerrainMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, terrain.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(terrain))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void putWithIdMismatchTerrain() throws Exception {
-        int databaseSizeBeforeUpdate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = terrainRepository.findAll().size();
         terrain.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, count.incrementAndGet())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(terrain))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restTerrainMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, count.incrementAndGet())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(terrain))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void putWithMissingIdPathParamTerrain() throws Exception {
-        int databaseSizeBeforeUpdate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = terrainRepository.findAll().size();
         terrain.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(terrain))
-            .exchange()
-            .expectStatus()
-            .isEqualTo(405);
+        restTerrainMockMvc
+            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(terrain)))
+            .andExpect(status().isMethodNotAllowed());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void partialUpdateTerrainWithPatch() throws Exception {
         // Initialize the database
-        terrainRepository.save(terrain).block();
+        terrainRepository.saveAndFlush(terrain);
 
-        int databaseSizeBeforeUpdate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = terrainRepository.findAll().size();
 
         // Update the terrain using partial update
         Terrain partialUpdatedTerrain = new Terrain();
@@ -324,17 +253,16 @@ class TerrainResourceIT {
 
         partialUpdatedTerrain.capaciteParEquipe(UPDATED_CAPACITE_PAR_EQUIPE);
 
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, partialUpdatedTerrain.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(partialUpdatedTerrain))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restTerrainMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedTerrain.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedTerrain))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeUpdate);
         Terrain testTerrain = terrainList.get(terrainList.size() - 1);
         assertThat(testTerrain.getNom()).isEqualTo(DEFAULT_NOM);
@@ -342,11 +270,12 @@ class TerrainResourceIT {
     }
 
     @Test
+    @Transactional
     void fullUpdateTerrainWithPatch() throws Exception {
         // Initialize the database
-        terrainRepository.save(terrain).block();
+        terrainRepository.saveAndFlush(terrain);
 
-        int databaseSizeBeforeUpdate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = terrainRepository.findAll().size();
 
         // Update the terrain using partial update
         Terrain partialUpdatedTerrain = new Terrain();
@@ -354,17 +283,16 @@ class TerrainResourceIT {
 
         partialUpdatedTerrain.nom(UPDATED_NOM).capaciteParEquipe(UPDATED_CAPACITE_PAR_EQUIPE);
 
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, partialUpdatedTerrain.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(partialUpdatedTerrain))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restTerrainMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedTerrain.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedTerrain))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeUpdate);
         Terrain testTerrain = terrainList.get(terrainList.size() - 1);
         assertThat(testTerrain.getNom()).isEqualTo(UPDATED_NOM);
@@ -372,83 +300,76 @@ class TerrainResourceIT {
     }
 
     @Test
+    @Transactional
     void patchNonExistingTerrain() throws Exception {
-        int databaseSizeBeforeUpdate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = terrainRepository.findAll().size();
         terrain.setId(count.incrementAndGet());
 
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, terrain.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(terrain))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restTerrainMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, terrain.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(terrain))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void patchWithIdMismatchTerrain() throws Exception {
-        int databaseSizeBeforeUpdate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = terrainRepository.findAll().size();
         terrain.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, count.incrementAndGet())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(terrain))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restTerrainMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, count.incrementAndGet())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(terrain))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void patchWithMissingIdPathParamTerrain() throws Exception {
-        int databaseSizeBeforeUpdate = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = terrainRepository.findAll().size();
         terrain.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(terrain))
-            .exchange()
-            .expectStatus()
-            .isEqualTo(405);
+        restTerrainMockMvc
+            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(TestUtil.convertObjectToJsonBytes(terrain)))
+            .andExpect(status().isMethodNotAllowed());
 
         // Validate the Terrain in the database
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
-    void deleteTerrain() {
+    @Transactional
+    void deleteTerrain() throws Exception {
         // Initialize the database
-        terrainRepository.save(terrain).block();
+        terrainRepository.saveAndFlush(terrain);
 
-        int databaseSizeBeforeDelete = terrainRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeDelete = terrainRepository.findAll().size();
 
         // Delete the terrain
-        webTestClient
-            .delete()
-            .uri(ENTITY_API_URL_ID, terrain.getId())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isNoContent();
+        restTerrainMockMvc
+            .perform(delete(ENTITY_API_URL_ID, terrain.getId()).accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        List<Terrain> terrainList = terrainRepository.findAll().collectList().block();
+        List<Terrain> terrainList = terrainRepository.findAll();
         assertThat(terrainList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }

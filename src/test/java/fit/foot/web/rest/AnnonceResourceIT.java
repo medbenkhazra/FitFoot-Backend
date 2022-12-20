@@ -3,14 +3,13 @@ package fit.foot.web.rest;
 import static fit.foot.web.rest.TestUtil.sameInstant;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import fit.foot.IntegrationTest;
 import fit.foot.domain.Annonce;
 import fit.foot.domain.enumeration.STATUS;
 import fit.foot.repository.AnnonceRepository;
-import fit.foot.repository.EntityManager;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -18,20 +17,21 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
-import org.junit.jupiter.api.AfterEach;
+import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Integration tests for the {@link AnnonceResource} REST controller.
  */
 @IntegrationTest
-@AutoConfigureWebTestClient(timeout = IntegrationTest.DEFAULT_ENTITY_TIMEOUT)
+@AutoConfigureMockMvc
 @WithMockUser
 class AnnonceResourceIT {
 
@@ -69,7 +69,7 @@ class AnnonceResourceIT {
     private EntityManager em;
 
     @Autowired
-    private WebTestClient webTestClient;
+    private MockMvc restAnnonceMockMvc;
 
     private Annonce annonce;
 
@@ -109,40 +109,22 @@ class AnnonceResourceIT {
         return annonce;
     }
 
-    public static void deleteEntities(EntityManager em) {
-        try {
-            em.deleteAll(Annonce.class).block();
-        } catch (Exception e) {
-            // It can fail, if other entities are still referring this - it will be removed later.
-        }
-    }
-
-    @AfterEach
-    public void cleanup() {
-        deleteEntities(em);
-    }
-
     @BeforeEach
     public void initTest() {
-        deleteEntities(em);
         annonce = createEntity(em);
     }
 
     @Test
+    @Transactional
     void createAnnonce() throws Exception {
-        int databaseSizeBeforeCreate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeCreate = annonceRepository.findAll().size();
         // Create the Annonce
-        webTestClient
-            .post()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(annonce))
-            .exchange()
-            .expectStatus()
-            .isCreated();
+        restAnnonceMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(annonce)))
+            .andExpect(status().isCreated());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeCreate + 1);
         Annonce testAnnonce = annonceList.get(annonceList.size() - 1);
         assertThat(testAnnonce.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
@@ -155,148 +137,84 @@ class AnnonceResourceIT {
     }
 
     @Test
+    @Transactional
     void createAnnonceWithExistingId() throws Exception {
         // Create the Annonce with an existing ID
         annonce.setId(1L);
 
-        int databaseSizeBeforeCreate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeCreate = annonceRepository.findAll().size();
 
         // An entity with an existing ID cannot be created, so this API call must fail
-        webTestClient
-            .post()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(annonce))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restAnnonceMockMvc
+            .perform(post(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(annonce)))
+            .andExpect(status().isBadRequest());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
-    void getAllAnnoncesAsStream() {
+    @Transactional
+    void getAllAnnonces() throws Exception {
         // Initialize the database
-        annonceRepository.save(annonce).block();
-
-        List<Annonce> annonceList = webTestClient
-            .get()
-            .uri(ENTITY_API_URL)
-            .accept(MediaType.APPLICATION_NDJSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentTypeCompatibleWith(MediaType.APPLICATION_NDJSON)
-            .returnResult(Annonce.class)
-            .getResponseBody()
-            .filter(annonce::equals)
-            .collectList()
-            .block(Duration.ofSeconds(5));
-
-        assertThat(annonceList).isNotNull();
-        assertThat(annonceList).hasSize(1);
-        Annonce testAnnonce = annonceList.get(0);
-        assertThat(testAnnonce.getDescription()).isEqualTo(DEFAULT_DESCRIPTION);
-        assertThat(testAnnonce.getHeureDebut()).isEqualTo(DEFAULT_HEURE_DEBUT);
-        assertThat(testAnnonce.getHeureFin()).isEqualTo(DEFAULT_HEURE_FIN);
-        assertThat(testAnnonce.getDuree()).isEqualTo(DEFAULT_DUREE);
-        assertThat(testAnnonce.getValidation()).isEqualTo(DEFAULT_VALIDATION);
-        assertThat(testAnnonce.getNombreParEquipe()).isEqualTo(DEFAULT_NOMBRE_PAR_EQUIPE);
-        assertThat(testAnnonce.getStatus()).isEqualTo(DEFAULT_STATUS);
-    }
-
-    @Test
-    void getAllAnnonces() {
-        // Initialize the database
-        annonceRepository.save(annonce).block();
+        annonceRepository.saveAndFlush(annonce);
 
         // Get all the annonceList
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL + "?sort=id,desc")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.[*].id")
-            .value(hasItem(annonce.getId().intValue()))
-            .jsonPath("$.[*].description")
-            .value(hasItem(DEFAULT_DESCRIPTION))
-            .jsonPath("$.[*].heureDebut")
-            .value(hasItem(sameInstant(DEFAULT_HEURE_DEBUT)))
-            .jsonPath("$.[*].heureFin")
-            .value(hasItem(sameInstant(DEFAULT_HEURE_FIN)))
-            .jsonPath("$.[*].duree")
-            .value(hasItem(DEFAULT_DUREE))
-            .jsonPath("$.[*].validation")
-            .value(hasItem(DEFAULT_VALIDATION.booleanValue()))
-            .jsonPath("$.[*].nombreParEquipe")
-            .value(hasItem(DEFAULT_NOMBRE_PAR_EQUIPE))
-            .jsonPath("$.[*].status")
-            .value(hasItem(DEFAULT_STATUS.toString()));
+        restAnnonceMockMvc
+            .perform(get(ENTITY_API_URL + "?sort=id,desc"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(annonce.getId().intValue())))
+            .andExpect(jsonPath("$.[*].description").value(hasItem(DEFAULT_DESCRIPTION)))
+            .andExpect(jsonPath("$.[*].heureDebut").value(hasItem(sameInstant(DEFAULT_HEURE_DEBUT))))
+            .andExpect(jsonPath("$.[*].heureFin").value(hasItem(sameInstant(DEFAULT_HEURE_FIN))))
+            .andExpect(jsonPath("$.[*].duree").value(hasItem(DEFAULT_DUREE)))
+            .andExpect(jsonPath("$.[*].validation").value(hasItem(DEFAULT_VALIDATION.booleanValue())))
+            .andExpect(jsonPath("$.[*].nombreParEquipe").value(hasItem(DEFAULT_NOMBRE_PAR_EQUIPE)))
+            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())));
     }
 
     @Test
-    void getAnnonce() {
+    @Transactional
+    void getAnnonce() throws Exception {
         // Initialize the database
-        annonceRepository.save(annonce).block();
+        annonceRepository.saveAndFlush(annonce);
 
         // Get the annonce
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL_ID, annonce.getId())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isOk()
-            .expectHeader()
-            .contentType(MediaType.APPLICATION_JSON)
-            .expectBody()
-            .jsonPath("$.id")
-            .value(is(annonce.getId().intValue()))
-            .jsonPath("$.description")
-            .value(is(DEFAULT_DESCRIPTION))
-            .jsonPath("$.heureDebut")
-            .value(is(sameInstant(DEFAULT_HEURE_DEBUT)))
-            .jsonPath("$.heureFin")
-            .value(is(sameInstant(DEFAULT_HEURE_FIN)))
-            .jsonPath("$.duree")
-            .value(is(DEFAULT_DUREE))
-            .jsonPath("$.validation")
-            .value(is(DEFAULT_VALIDATION.booleanValue()))
-            .jsonPath("$.nombreParEquipe")
-            .value(is(DEFAULT_NOMBRE_PAR_EQUIPE))
-            .jsonPath("$.status")
-            .value(is(DEFAULT_STATUS.toString()));
+        restAnnonceMockMvc
+            .perform(get(ENTITY_API_URL_ID, annonce.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.id").value(annonce.getId().intValue()))
+            .andExpect(jsonPath("$.description").value(DEFAULT_DESCRIPTION))
+            .andExpect(jsonPath("$.heureDebut").value(sameInstant(DEFAULT_HEURE_DEBUT)))
+            .andExpect(jsonPath("$.heureFin").value(sameInstant(DEFAULT_HEURE_FIN)))
+            .andExpect(jsonPath("$.duree").value(DEFAULT_DUREE))
+            .andExpect(jsonPath("$.validation").value(DEFAULT_VALIDATION.booleanValue()))
+            .andExpect(jsonPath("$.nombreParEquipe").value(DEFAULT_NOMBRE_PAR_EQUIPE))
+            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()));
     }
 
     @Test
-    void getNonExistingAnnonce() {
+    @Transactional
+    void getNonExistingAnnonce() throws Exception {
         // Get the annonce
-        webTestClient
-            .get()
-            .uri(ENTITY_API_URL_ID, Long.MAX_VALUE)
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isNotFound();
+        restAnnonceMockMvc.perform(get(ENTITY_API_URL_ID, Long.MAX_VALUE)).andExpect(status().isNotFound());
     }
 
     @Test
+    @Transactional
     void putExistingAnnonce() throws Exception {
         // Initialize the database
-        annonceRepository.save(annonce).block();
+        annonceRepository.saveAndFlush(annonce);
 
-        int databaseSizeBeforeUpdate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = annonceRepository.findAll().size();
 
         // Update the annonce
-        Annonce updatedAnnonce = annonceRepository.findById(annonce.getId()).block();
+        Annonce updatedAnnonce = annonceRepository.findById(annonce.getId()).get();
+        // Disconnect from session so that the updates on updatedAnnonce are not directly saved in db
+        em.detach(updatedAnnonce);
         updatedAnnonce
             .description(UPDATED_DESCRIPTION)
             .heureDebut(UPDATED_HEURE_DEBUT)
@@ -306,17 +224,16 @@ class AnnonceResourceIT {
             .nombreParEquipe(UPDATED_NOMBRE_PAR_EQUIPE)
             .status(UPDATED_STATUS);
 
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, updatedAnnonce.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(updatedAnnonce))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restAnnonceMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, updatedAnnonce.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(updatedAnnonce))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeUpdate);
         Annonce testAnnonce = annonceList.get(annonceList.size() - 1);
         assertThat(testAnnonce.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
@@ -329,71 +246,68 @@ class AnnonceResourceIT {
     }
 
     @Test
+    @Transactional
     void putNonExistingAnnonce() throws Exception {
-        int databaseSizeBeforeUpdate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = annonceRepository.findAll().size();
         annonce.setId(count.incrementAndGet());
 
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, annonce.getId())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(annonce))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restAnnonceMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, annonce.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(annonce))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void putWithIdMismatchAnnonce() throws Exception {
-        int databaseSizeBeforeUpdate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = annonceRepository.findAll().size();
         annonce.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL_ID, count.incrementAndGet())
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(annonce))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restAnnonceMockMvc
+            .perform(
+                put(ENTITY_API_URL_ID, count.incrementAndGet())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(TestUtil.convertObjectToJsonBytes(annonce))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void putWithMissingIdPathParamAnnonce() throws Exception {
-        int databaseSizeBeforeUpdate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = annonceRepository.findAll().size();
         annonce.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .put()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(TestUtil.convertObjectToJsonBytes(annonce))
-            .exchange()
-            .expectStatus()
-            .isEqualTo(405);
+        restAnnonceMockMvc
+            .perform(put(ENTITY_API_URL).contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(annonce)))
+            .andExpect(status().isMethodNotAllowed());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void partialUpdateAnnonceWithPatch() throws Exception {
         // Initialize the database
-        annonceRepository.save(annonce).block();
+        annonceRepository.saveAndFlush(annonce);
 
-        int databaseSizeBeforeUpdate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = annonceRepository.findAll().size();
 
         // Update the annonce using partial update
         Annonce partialUpdatedAnnonce = new Annonce();
@@ -406,17 +320,16 @@ class AnnonceResourceIT {
             .nombreParEquipe(UPDATED_NOMBRE_PAR_EQUIPE)
             .status(UPDATED_STATUS);
 
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, partialUpdatedAnnonce.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(partialUpdatedAnnonce))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restAnnonceMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedAnnonce.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedAnnonce))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeUpdate);
         Annonce testAnnonce = annonceList.get(annonceList.size() - 1);
         assertThat(testAnnonce.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
@@ -429,11 +342,12 @@ class AnnonceResourceIT {
     }
 
     @Test
+    @Transactional
     void fullUpdateAnnonceWithPatch() throws Exception {
         // Initialize the database
-        annonceRepository.save(annonce).block();
+        annonceRepository.saveAndFlush(annonce);
 
-        int databaseSizeBeforeUpdate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = annonceRepository.findAll().size();
 
         // Update the annonce using partial update
         Annonce partialUpdatedAnnonce = new Annonce();
@@ -448,17 +362,16 @@ class AnnonceResourceIT {
             .nombreParEquipe(UPDATED_NOMBRE_PAR_EQUIPE)
             .status(UPDATED_STATUS);
 
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, partialUpdatedAnnonce.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(partialUpdatedAnnonce))
-            .exchange()
-            .expectStatus()
-            .isOk();
+        restAnnonceMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, partialUpdatedAnnonce.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(partialUpdatedAnnonce))
+            )
+            .andExpect(status().isOk());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeUpdate);
         Annonce testAnnonce = annonceList.get(annonceList.size() - 1);
         assertThat(testAnnonce.getDescription()).isEqualTo(UPDATED_DESCRIPTION);
@@ -471,83 +384,76 @@ class AnnonceResourceIT {
     }
 
     @Test
+    @Transactional
     void patchNonExistingAnnonce() throws Exception {
-        int databaseSizeBeforeUpdate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = annonceRepository.findAll().size();
         annonce.setId(count.incrementAndGet());
 
         // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, annonce.getId())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(annonce))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restAnnonceMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, annonce.getId())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(annonce))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void patchWithIdMismatchAnnonce() throws Exception {
-        int databaseSizeBeforeUpdate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = annonceRepository.findAll().size();
         annonce.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL_ID, count.incrementAndGet())
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(annonce))
-            .exchange()
-            .expectStatus()
-            .isBadRequest();
+        restAnnonceMockMvc
+            .perform(
+                patch(ENTITY_API_URL_ID, count.incrementAndGet())
+                    .contentType("application/merge-patch+json")
+                    .content(TestUtil.convertObjectToJsonBytes(annonce))
+            )
+            .andExpect(status().isBadRequest());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
+    @Transactional
     void patchWithMissingIdPathParamAnnonce() throws Exception {
-        int databaseSizeBeforeUpdate = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeUpdate = annonceRepository.findAll().size();
         annonce.setId(count.incrementAndGet());
 
         // If url ID doesn't match entity ID, it will throw BadRequestAlertException
-        webTestClient
-            .patch()
-            .uri(ENTITY_API_URL)
-            .contentType(MediaType.valueOf("application/merge-patch+json"))
-            .bodyValue(TestUtil.convertObjectToJsonBytes(annonce))
-            .exchange()
-            .expectStatus()
-            .isEqualTo(405);
+        restAnnonceMockMvc
+            .perform(patch(ENTITY_API_URL).contentType("application/merge-patch+json").content(TestUtil.convertObjectToJsonBytes(annonce)))
+            .andExpect(status().isMethodNotAllowed());
 
         // Validate the Annonce in the database
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeUpdate);
     }
 
     @Test
-    void deleteAnnonce() {
+    @Transactional
+    void deleteAnnonce() throws Exception {
         // Initialize the database
-        annonceRepository.save(annonce).block();
+        annonceRepository.saveAndFlush(annonce);
 
-        int databaseSizeBeforeDelete = annonceRepository.findAll().collectList().block().size();
+        int databaseSizeBeforeDelete = annonceRepository.findAll().size();
 
         // Delete the annonce
-        webTestClient
-            .delete()
-            .uri(ENTITY_API_URL_ID, annonce.getId())
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus()
-            .isNoContent();
+        restAnnonceMockMvc
+            .perform(delete(ENTITY_API_URL_ID, annonce.getId()).accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
 
         // Validate the database contains one less item
-        List<Annonce> annonceList = annonceRepository.findAll().collectList().block();
+        List<Annonce> annonceList = annonceRepository.findAll();
         assertThat(annonceList).hasSize(databaseSizeBeforeDelete - 1);
     }
 }
