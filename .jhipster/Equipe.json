@@ -14,7 +14,7 @@
     {
       "otherEntityName": "annonce",
       "otherEntityRelationshipName": "equipe",
-      "ownerSide": true,
+      "ownerSide": false,
       "relationshipName": "annonce",
       "relationshipType": "one-to-one"
     },

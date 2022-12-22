@@ -42,6 +42,12 @@
         <dd>
           <span jhiTranslate="{{ 'fitFootApp.STATUS.' + annonce.status }}">{{ annonce.status }}</span>
         </dd>
+        <dt><span jhiTranslate="fitFootApp.annonce.equipe">Equipe</span></dt>
+        <dd>
+          <div *ngIf="annonce.equipe">
+            <a [routerLink]="['/equipe', annonce.equipe.id, 'view']">{{ annonce.equipe.id }}</a>
+          </div>
+        </dd>
         <dt><span jhiTranslate="fitFootApp.annonce.terrain">Terrain</span></dt>
         <dd>
           <div *ngIf="annonce.terrain">

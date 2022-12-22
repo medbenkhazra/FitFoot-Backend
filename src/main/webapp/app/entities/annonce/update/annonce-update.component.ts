@@ -7,6 +7,8 @@ import { finalize, map } from 'rxjs/operators';
 import { AnnonceFormService, AnnonceFormGroup } from './annonce-form.service';
 import { IAnnonce } from '../annonce.model';
 import { AnnonceService } from '../service/annonce.service';
+import { IEquipe } from 'app/entities/equipe/equipe.model';
+import { EquipeService } from 'app/entities/equipe/service/equipe.service';
 import { ITerrain } from 'app/entities/terrain/terrain.model';
 import { TerrainService } from 'app/entities/terrain/service/terrain.service';
 import { IJoueur } from 'app/entities/joueur/joueur.model';
@@ -22,6 +24,7 @@ export class AnnonceUpdateComponent implements OnInit {
   annonce: IAnnonce | null = null;
   sTATUSValues = Object.keys(STATUS);
 
+  equipesCollection: IEquipe[] = [];
   terrainsCollection: ITerrain[] = [];
   joueursSharedCollection: IJoueur[] = [];
 
@@ -30,10 +33,13 @@ export class AnnonceUpdateComponent implements OnInit {
   constructor(
     protected annonceService: AnnonceService,
     protected annonceFormService: AnnonceFormService,
+    protected equipeService: EquipeService,
     protected terrainService: TerrainService,
     protected joueurService: JoueurService,
     protected activatedRoute: ActivatedRoute
   ) {}
+
+  compareEquipe = (o1: IEquipe | null, o2: IEquipe | null): boolean => this.equipeService.compareEquipe(o1, o2);
 
   compareTerrain = (o1: ITerrain | null, o2: ITerrain | null): boolean => this.terrainService.compareTerrain(o1, o2);
 
@@ -87,6 +93,7 @@ export class AnnonceUpdateComponent implements OnInit {
     this.annonce = annonce;
     this.annonceFormService.resetForm(this.editForm, annonce);
 
+    this.equipesCollection = this.equipeService.addEquipeToCollectionIfMissing<IEquipe>(this.equipesCollection, annonce.equipe);
     this.terrainsCollection = this.terrainService.addTerrainToCollectionIfMissing<ITerrain>(this.terrainsCollection, annonce.terrain);
     this.joueursSharedCollection = this.joueurService.addJoueurToCollectionIfMissing<IJoueur>(
       this.joueursSharedCollection,
@@ -95,6 +102,12 @@ export class AnnonceUpdateComponent implements OnInit {
   }
 
   protected loadRelationshipsOptions(): void {
+    this.equipeService
+      .query({ filter: 'annonce-is-null' })
+      .pipe(map((res: HttpResponse<IEquipe[]>) => res.body ?? []))
+      .pipe(map((equipes: IEquipe[]) => this.equipeService.addEquipeToCollectionIfMissing<IEquipe>(equipes, this.annonce?.equipe)))
+      .subscribe((equipes: IEquipe[]) => (this.equipesCollection = equipes));
+
     this.terrainService
       .query({ filter: 'annonce-is-null' })
       .pipe(map((res: HttpResponse<ITerrain[]>) => res.body ?? []))

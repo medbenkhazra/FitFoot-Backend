@@ -38,12 +38,6 @@
               <fa-icon class="p-1" icon="sort"></fa-icon>
             </div>
           </th>
-          <th scope="col" jhiSortBy="annonce.id">
-            <div class="d-flex">
-              <span jhiTranslate="fitFootApp.equipe.annonce">Annonce</span>
-              <fa-icon class="p-1" icon="sort"></fa-icon>
-            </div>
-          </th>
           <th scope="col"></th>
         </tr>
       </thead>
@@ -51,11 +45,6 @@
         <tr *ngFor="let equipe of equipes; trackBy: trackId" data-cy="entityTable">
           <td>
             <a [routerLink]="['/equipe', equipe.id, 'view']">{{ equipe.id }}</a>
-          </td>
-          <td>
-            <div *ngIf="equipe.annonce">
-              <a [routerLink]="['/annonce', equipe.annonce.id, 'view']">{{ equipe.annonce.id }}</a>
-            </div>
           </td>
           <td class="text-end">
             <div class="btn-group">

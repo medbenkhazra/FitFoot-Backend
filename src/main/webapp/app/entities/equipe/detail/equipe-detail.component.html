@@ -14,12 +14,6 @@
         <dd>
           <span>{{ equipe.id }}</span>
         </dd>
-        <dt><span jhiTranslate="fitFootApp.equipe.annonce">Annonce</span></dt>
-        <dd>
-          <div *ngIf="equipe.annonce">
-            <a [routerLink]="['/annonce', equipe.annonce.id, 'view']">{{ equipe.annonce.id }}</a>
-          </div>
-        </dd>
       </dl>
 
       <button type="submit" (click)="previousState()" class="btn btn-info" data-cy="entityDetailsBackButton">

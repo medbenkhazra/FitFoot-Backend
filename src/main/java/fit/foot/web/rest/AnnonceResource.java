@@ -8,8 +8,6 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,7 +51,6 @@ public class AnnonceResource {
         if (annonce.getId() != null) {
             throw new BadRequestAlertException("A new annonce cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        System.out.println(annonce);
         Annonce result = annonceRepository.save(annonce);
         return ResponseEntity
             .created(new URI("/api/annonces/" + result.getId()))
@@ -159,18 +156,10 @@ public class AnnonceResource {
     /**
      * {@code GET  /annonces} : get all the annonces.
      *
-     * @param filter the filter of the request.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of annonces in body.
      */
     @GetMapping("/annonces")
-    public List<Annonce> getAllAnnonces(@RequestParam(required = false) String filter) {
-        if ("equipe-is-null".equals(filter)) {
-            log.debug("REST request to get all Annonces where equipe is null");
-            return StreamSupport
-                .stream(annonceRepository.findAll().spliterator(), false)
-                .filter(annonce -> annonce.getEquipe() == null)
-                .collect(Collectors.toList());
-        }
+    public List<Annonce> getAllAnnonces() {
         log.debug("REST request to get all Annonces");
         return annonceRepository.findAll();
     }

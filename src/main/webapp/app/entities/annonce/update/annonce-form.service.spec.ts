@@ -27,6 +27,7 @@ describe('Annonce Form Service', () => {
             validation: expect.any(Object),
             nombreParEquipe: expect.any(Object),
             status: expect.any(Object),
+            equipe: expect.any(Object),
             terrain: expect.any(Object),
             responsable: expect.any(Object),
           })
@@ -46,6 +47,7 @@ describe('Annonce Form Service', () => {
             validation: expect.any(Object),
             nombreParEquipe: expect.any(Object),
             status: expect.any(Object),
+            equipe: expect.any(Object),
             terrain: expect.any(Object),
             responsable: expect.any(Object),
           })

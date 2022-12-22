@@ -20,7 +20,6 @@ describe('Equipe Form Service', () => {
         expect(formGroup.controls).toEqual(
           expect.objectContaining({
             id: expect.any(Object),
-            annonce: expect.any(Object),
             joueurs: expect.any(Object),
           })
         );
@@ -32,7 +31,6 @@ describe('Equipe Form Service', () => {
         expect(formGroup.controls).toEqual(
           expect.objectContaining({
             id: expect.any(Object),
-            annonce: expect.any(Object),
             joueurs: expect.any(Object),
           })
         );

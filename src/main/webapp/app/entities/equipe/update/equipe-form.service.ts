@@ -18,7 +18,6 @@ type EquipeFormDefaults = Pick<NewEquipe, 'id' | 'joueurs'>;
 
 type EquipeFormGroupContent = {
   id: FormControl<IEquipe['id'] | NewEquipe['id']>;
-  annonce: FormControl<IEquipe['annonce']>;
   joueurs: FormControl<IEquipe['joueurs']>;
 };
 
@@ -39,7 +38,6 @@ export class EquipeFormService {
           validators: [Validators.required],
         }
       ),
-      annonce: new FormControl(equipeRawValue.annonce),
       joueurs: new FormControl(equipeRawValue.joueurs ?? []),
     });
   }

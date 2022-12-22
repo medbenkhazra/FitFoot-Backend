@@ -2,13 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
-import { finalize, map } from 'rxjs/operators';
+import { finalize } from 'rxjs/operators';
 
 import { EquipeFormService, EquipeFormGroup } from './equipe-form.service';
 import { IEquipe } from '../equipe.model';
 import { EquipeService } from '../service/equipe.service';
-import { IAnnonce } from 'app/entities/annonce/annonce.model';
-import { AnnonceService } from 'app/entities/annonce/service/annonce.service';
 
 @Component({
   selector: 'jhi-equipe-update',
@@ -18,18 +16,13 @@ export class EquipeUpdateComponent implements OnInit {
   isSaving = false;
   equipe: IEquipe | null = null;
 
-  annoncesCollection: IAnnonce[] = [];
-
   editForm: EquipeFormGroup = this.equipeFormService.createEquipeFormGroup();
 
   constructor(
     protected equipeService: EquipeService,
     protected equipeFormService: EquipeFormService,
-    protected annonceService: AnnonceService,
     protected activatedRoute: ActivatedRoute
   ) {}
-
-  compareAnnonce = (o1: IAnnonce | null, o2: IAnnonce | null): boolean => this.annonceService.compareAnnonce(o1, o2);
 
   ngOnInit(): void {
     this.activatedRoute.data.subscribe(({ equipe }) => {
@@ -37,8 +30,6 @@ export class EquipeUpdateComponent implements OnInit {
       if (equipe) {
         this.updateForm(equipe);
       }
-
-      this.loadRelationshipsOptions();
     });
   }
 
@@ -78,15 +69,5 @@ export class EquipeUpdateComponent implements OnInit {
   protected updateForm(equipe: IEquipe): void {
     this.equipe = equipe;
     this.equipeFormService.resetForm(this.editForm, equipe);
-
-    this.annoncesCollection = this.annonceService.addAnnonceToCollectionIfMissing<IAnnonce>(this.annoncesCollection, equipe.annonce);
-  }
-
-  protected loadRelationshipsOptions(): void {
-    this.annonceService
-      .query({ filter: 'equipe-is-null' })
-      .pipe(map((res: HttpResponse<IAnnonce[]>) => res.body ?? []))
-      .pipe(map((annonces: IAnnonce[]) => this.annonceService.addAnnonceToCollectionIfMissing<IAnnonce>(annonces, this.equipe?.annonce)))
-      .subscribe((annonces: IAnnonce[]) => (this.annoncesCollection = annonces));
   }
 }

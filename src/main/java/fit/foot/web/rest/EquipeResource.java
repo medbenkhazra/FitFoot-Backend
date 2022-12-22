@@ -8,6 +8,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,7 +85,8 @@ public class EquipeResource {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
 
-        Equipe result = equipeRepository.save(equipe);
+        // no save call needed as we have no fields that can be updated
+        Equipe result = equipe;
         return ResponseEntity
             .ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, equipe.getId().toString()))
@@ -122,8 +125,7 @@ public class EquipeResource {
             .findById(equipe.getId())
             .map(existingEquipe -> {
                 return existingEquipe;
-            })
-            .map(equipeRepository::save);
+            }); // .map(equipeRepository::save)
 
         return ResponseUtil.wrapOrNotFound(
             result,
@@ -134,10 +136,18 @@ public class EquipeResource {
     /**
      * {@code GET  /equipes} : get all the equipes.
      *
+     * @param filter the filter of the request.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of equipes in body.
      */
     @GetMapping("/equipes")
-    public List<Equipe> getAllEquipes() {
+    public List<Equipe> getAllEquipes(@RequestParam(required = false) String filter) {
+        if ("annonce-is-null".equals(filter)) {
+            log.debug("REST request to get all Equipes where annonce is null");
+            return StreamSupport
+                .stream(equipeRepository.findAll().spliterator(), false)
+                .filter(equipe -> equipe.getAnnonce() == null)
+                .collect(Collectors.toList());
+        }
         log.debug("REST request to get all Equipes");
         return equipeRepository.findAll();
     }

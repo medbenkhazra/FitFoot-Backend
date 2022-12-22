@@ -43,17 +43,18 @@ public class Annonce implements Serializable {
     @Column(name = "status")
     private STATUS status;
 
+    @JsonIgnoreProperties(value = { "annonce", "joueurs" }, allowSetters = true)
+    @OneToOne
+    @JoinColumn(unique = true)
+    private Equipe equipe;
+
     @JsonIgnoreProperties(value = { "reservations", "annonce", "complexe" }, allowSetters = true)
     @OneToOne
     @JoinColumn(unique = true)
     private Terrain terrain;
 
-    @JsonIgnoreProperties(value = {}, allowSetters = true)
-    @OneToOne(mappedBy = "annonce")
-    private Equipe equipe;
-
     @ManyToOne
-    @JsonIgnoreProperties(value = { "avatar", "annonces", "equipes", "quartier" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "user", "annonces", "equipes", "quartier" }, allowSetters = true)
     private Joueur responsable;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
@@ -162,6 +163,19 @@ public class Annonce implements Serializable {
         this.status = status;
     }
 
+    public Equipe getEquipe() {
+        return this.equipe;
+    }
+
+    public void setEquipe(Equipe equipe) {
+        this.equipe = equipe;
+    }
+
+    public Annonce equipe(Equipe equipe) {
+        this.setEquipe(equipe);
+        return this;
+    }
+
     public Terrain getTerrain() {
         return this.terrain;
     }
@@ -172,25 +186,6 @@ public class Annonce implements Serializable {
 
     public Annonce terrain(Terrain terrain) {
         this.setTerrain(terrain);
-        return this;
-    }
-
-    public Equipe getEquipe() {
-        return this.equipe;
-    }
-
-    public void setEquipe(Equipe equipe) {
-        if (this.equipe != null) {
-            this.equipe.setAnnonce(null);
-        }
-        if (equipe != null) {
-            equipe.setAnnonce(this);
-        }
-        this.equipe = equipe;
-    }
-
-    public Annonce equipe(Equipe equipe) {
-        this.setEquipe(equipe);
         return this;
     }
 

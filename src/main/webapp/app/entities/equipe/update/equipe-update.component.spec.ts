@@ -9,8 +9,6 @@ import { of, Subject, from } from 'rxjs';
 import { EquipeFormService } from './equipe-form.service';
 import { EquipeService } from '../service/equipe.service';
 import { IEquipe } from '../equipe.model';
-import { IAnnonce } from 'app/entities/annonce/annonce.model';
-import { AnnonceService } from 'app/entities/annonce/service/annonce.service';
 
 import { EquipeUpdateComponent } from './equipe-update.component';
 
@@ -20,7 +18,6 @@ describe('Equipe Management Update Component', () => {
   let activatedRoute: ActivatedRoute;
   let equipeFormService: EquipeFormService;
   let equipeService: EquipeService;
-  let annonceService: AnnonceService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -43,39 +40,17 @@ describe('Equipe Management Update Component', () => {
     activatedRoute = TestBed.inject(ActivatedRoute);
     equipeFormService = TestBed.inject(EquipeFormService);
     equipeService = TestBed.inject(EquipeService);
-    annonceService = TestBed.inject(AnnonceService);
 
     comp = fixture.componentInstance;
   });
 
   describe('ngOnInit', () => {
-    it('Should call annonce query and add missing value', () => {
-      const equipe: IEquipe = { id: 456 };
-      const annonce: IAnnonce = { id: 96816 };
-      equipe.annonce = annonce;
-
-      const annonceCollection: IAnnonce[] = [{ id: 8027 }];
-      jest.spyOn(annonceService, 'query').mockReturnValue(of(new HttpResponse({ body: annonceCollection })));
-      const expectedCollection: IAnnonce[] = [annonce, ...annonceCollection];
-      jest.spyOn(annonceService, 'addAnnonceToCollectionIfMissing').mockReturnValue(expectedCollection);
-
-      activatedRoute.data = of({ equipe });
-      comp.ngOnInit();
-
-      expect(annonceService.query).toHaveBeenCalled();
-      expect(annonceService.addAnnonceToCollectionIfMissing).toHaveBeenCalledWith(annonceCollection, annonce);
-      expect(comp.annoncesCollection).toEqual(expectedCollection);
-    });
-
     it('Should update editForm', () => {
       const equipe: IEquipe = { id: 456 };
-      const annonce: IAnnonce = { id: 75885 };
-      equipe.annonce = annonce;
 
       activatedRoute.data = of({ equipe });
       comp.ngOnInit();
 
-      expect(comp.annoncesCollection).toContain(annonce);
       expect(comp.equipe).toEqual(equipe);
     });
   });
@@ -145,18 +120,6 @@ describe('Equipe Management Update Component', () => {
       expect(equipeService.update).toHaveBeenCalled();
       expect(comp.isSaving).toEqual(false);
       expect(comp.previousState).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Compare relationships', () => {
-    describe('compareAnnonce', () => {
-      it('Should forward to annonceService', () => {
-        const entity = { id: 123 };
-        const entity2 = { id: 456 };
-        jest.spyOn(annonceService, 'compareAnnonce');
-        comp.compareAnnonce(entity, entity2);
-        expect(annonceService.compareAnnonce).toHaveBeenCalledWith(entity, entity2);
-      });
     });
   });
 });

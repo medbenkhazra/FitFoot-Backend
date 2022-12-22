@@ -39,6 +39,7 @@ type AnnonceFormGroupContent = {
   validation: FormControl<AnnonceFormRawValue['validation']>;
   nombreParEquipe: FormControl<AnnonceFormRawValue['nombreParEquipe']>;
   status: FormControl<AnnonceFormRawValue['status']>;
+  equipe: FormControl<AnnonceFormRawValue['equipe']>;
   terrain: FormControl<AnnonceFormRawValue['terrain']>;
   responsable: FormControl<AnnonceFormRawValue['responsable']>;
 };
@@ -67,6 +68,7 @@ export class AnnonceFormService {
       validation: new FormControl(annonceRawValue.validation),
       nombreParEquipe: new FormControl(annonceRawValue.nombreParEquipe),
       status: new FormControl(annonceRawValue.status),
+      equipe: new FormControl(annonceRawValue.equipe),
       terrain: new FormControl(annonceRawValue.terrain),
       responsable: new FormControl(annonceRawValue.responsable),
     });

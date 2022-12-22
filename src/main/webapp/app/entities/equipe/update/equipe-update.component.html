@@ -12,21 +12,6 @@
           <label class="form-label" jhiTranslate="global.field.id" for="field_id">ID</label>
           <input type="number" class="form-control" name="id" id="field_id" data-cy="id" formControlName="id" [readonly]="true" />
         </div>
-
-        <div class="row mb-3">
-          <label class="form-label" jhiTranslate="fitFootApp.equipe.annonce" for="field_annonce">Annonce</label>
-          <select
-            class="form-control"
-            id="field_annonce"
-            data-cy="annonce"
-            name="annonce"
-            formControlName="annonce"
-            [compareWith]="compareAnnonce"
-          >
-            <option [ngValue]="null"></option>
-            <option [ngValue]="annonceOption" *ngFor="let annonceOption of annoncesCollection">{{ annonceOption.id }}</option>
-          </select>
-        </div>
       </div>
 
       <div>

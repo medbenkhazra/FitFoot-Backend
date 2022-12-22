@@ -42,17 +42,17 @@
   "readOnly": false,
   "relationships": [
     {
+      "otherEntityName": "equipe",
+      "otherEntityRelationshipName": "annonce",
+      "ownerSide": true,
+      "relationshipName": "equipe",
+      "relationshipType": "one-to-one"
+    },
+    {
       "otherEntityName": "terrain",
       "otherEntityRelationshipName": "annonce",
       "ownerSide": true,
       "relationshipName": "terrain",
-      "relationshipType": "one-to-one"
-    },
-    {
-      "otherEntityName": "equipe",
-      "otherEntityRelationshipName": "annonce",
-      "ownerSide": false,
-      "relationshipName": "equipe",
       "relationshipType": "one-to-one"
     },
     {

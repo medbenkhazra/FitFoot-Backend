@@ -80,6 +80,12 @@
               <fa-icon class="p-1" icon="sort"></fa-icon>
             </div>
           </th>
+          <th scope="col" jhiSortBy="equipe.id">
+            <div class="d-flex">
+              <span jhiTranslate="fitFootApp.annonce.equipe">Equipe</span>
+              <fa-icon class="p-1" icon="sort"></fa-icon>
+            </div>
+          </th>
           <th scope="col" jhiSortBy="terrain.id">
             <div class="d-flex">
               <span jhiTranslate="fitFootApp.annonce.terrain">Terrain</span>
@@ -107,6 +113,11 @@
           <td>{{ annonce.validation }}</td>
           <td>{{ annonce.nombreParEquipe }}</td>
           <td jhiTranslate="{{ 'fitFootApp.STATUS.' + annonce.status }}">{{ annonce.status }}</td>
+          <td>
+            <div *ngIf="annonce.equipe">
+              <a [routerLink]="['/equipe', annonce.equipe.id, 'view']">{{ annonce.equipe.id }}</a>
+            </div>
+          </td>
           <td>
             <div *ngIf="annonce.terrain">
               <a [routerLink]="['/terrain', annonce.terrain.id, 'view']">{{ annonce.terrain.id }}</a>

@@ -21,9 +21,8 @@ public class Equipe implements Serializable {
     @Column(name = "id")
     private Long id;
 
-    @JsonIgnoreProperties(value = { "terrain", "equipe", "responsable" }, allowSetters = true)
-    @OneToOne
-    @JoinColumn(unique = true)
+    @JsonIgnoreProperties(value = { "equipe", "terrain", "responsable" }, allowSetters = true)
+    @OneToOne(mappedBy = "equipe")
     private Annonce annonce;
 
     @ManyToMany(mappedBy = "equipes")
@@ -50,6 +49,12 @@ public class Equipe implements Serializable {
     }
 
     public void setAnnonce(Annonce annonce) {
+        if (this.annonce != null) {
+            this.annonce.setEquipe(null);
+        }
+        if (annonce != null) {
+            annonce.setEquipe(this);
+        }
         this.annonce = annonce;
     }
 

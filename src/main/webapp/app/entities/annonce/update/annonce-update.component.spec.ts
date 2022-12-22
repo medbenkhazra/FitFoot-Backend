@@ -9,6 +9,8 @@ import { of, Subject, from } from 'rxjs';
 import { AnnonceFormService } from './annonce-form.service';
 import { AnnonceService } from '../service/annonce.service';
 import { IAnnonce } from '../annonce.model';
+import { IEquipe } from 'app/entities/equipe/equipe.model';
+import { EquipeService } from 'app/entities/equipe/service/equipe.service';
 import { ITerrain } from 'app/entities/terrain/terrain.model';
 import { TerrainService } from 'app/entities/terrain/service/terrain.service';
 import { IJoueur } from 'app/entities/joueur/joueur.model';
@@ -22,6 +24,7 @@ describe('Annonce Management Update Component', () => {
   let activatedRoute: ActivatedRoute;
   let annonceFormService: AnnonceFormService;
   let annonceService: AnnonceService;
+  let equipeService: EquipeService;
   let terrainService: TerrainService;
   let joueurService: JoueurService;
 
@@ -46,6 +49,7 @@ describe('Annonce Management Update Component', () => {
     activatedRoute = TestBed.inject(ActivatedRoute);
     annonceFormService = TestBed.inject(AnnonceFormService);
     annonceService = TestBed.inject(AnnonceService);
+    equipeService = TestBed.inject(EquipeService);
     terrainService = TestBed.inject(TerrainService);
     joueurService = TestBed.inject(JoueurService);
 
@@ -53,6 +57,24 @@ describe('Annonce Management Update Component', () => {
   });
 
   describe('ngOnInit', () => {
+    it('Should call equipe query and add missing value', () => {
+      const annonce: IAnnonce = { id: 456 };
+      const equipe: IEquipe = { id: 4657 };
+      annonce.equipe = equipe;
+
+      const equipeCollection: IEquipe[] = [{ id: 10688 }];
+      jest.spyOn(equipeService, 'query').mockReturnValue(of(new HttpResponse({ body: equipeCollection })));
+      const expectedCollection: IEquipe[] = [equipe, ...equipeCollection];
+      jest.spyOn(equipeService, 'addEquipeToCollectionIfMissing').mockReturnValue(expectedCollection);
+
+      activatedRoute.data = of({ annonce });
+      comp.ngOnInit();
+
+      expect(equipeService.query).toHaveBeenCalled();
+      expect(equipeService.addEquipeToCollectionIfMissing).toHaveBeenCalledWith(equipeCollection, equipe);
+      expect(comp.equipesCollection).toEqual(expectedCollection);
+    });
+
     it('Should call terrain query and add missing value', () => {
       const annonce: IAnnonce = { id: 456 };
       const terrain: ITerrain = { id: 15564 };
@@ -95,6 +117,8 @@ describe('Annonce Management Update Component', () => {
 
     it('Should update editForm', () => {
       const annonce: IAnnonce = { id: 456 };
+      const equipe: IEquipe = { id: 30639 };
+      annonce.equipe = equipe;
       const terrain: ITerrain = { id: 7161 };
       annonce.terrain = terrain;
       const responsable: IJoueur = { id: 5453 };
@@ -103,6 +127,7 @@ describe('Annonce Management Update Component', () => {
       activatedRoute.data = of({ annonce });
       comp.ngOnInit();
 
+      expect(comp.equipesCollection).toContain(equipe);
       expect(comp.terrainsCollection).toContain(terrain);
       expect(comp.joueursSharedCollection).toContain(responsable);
       expect(comp.annonce).toEqual(annonce);
@@ -178,6 +203,16 @@ describe('Annonce Management Update Component', () => {
   });
 
   describe('Compare relationships', () => {
+    describe('compareEquipe', () => {
+      it('Should forward to equipeService', () => {
+        const entity = { id: 123 };
+        const entity2 = { id: 456 };
+        jest.spyOn(equipeService, 'compareEquipe');
+        comp.compareEquipe(entity, entity2);
+        expect(equipeService.compareEquipe).toHaveBeenCalledWith(entity, entity2);
+      });
+    });
+
     describe('compareTerrain', () => {
       it('Should forward to terrainService', () => {
         const entity = { id: 123 };

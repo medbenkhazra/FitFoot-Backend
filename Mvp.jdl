@@ -54,7 +54,7 @@ heureFin ZonedDateTime
 relationship OneToOne {
   Proprietaire{user} to User
   Joueur{user} to User
-  Equipe to Annonce
+  Annonce to Equipe
   Annonce to Terrain
 }
 relationship ManyToMany {

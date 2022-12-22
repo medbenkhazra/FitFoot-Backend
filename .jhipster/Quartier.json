@@ -1,5 +1,5 @@
 {
-  "applications": ["FitFoot"],
+  "applications": "*",
   "changelogDate": "20221205182322",
   "dto": "no",
   "embedded": false,
@@ -17,15 +17,15 @@
   "readOnly": false,
   "relationships": [
     {
-      "otherEntityName": "complexe",
-      "otherEntityRelationshipName": "quartier",
-      "relationshipName": "complexe",
-      "relationshipType": "one-to-many"
-    },
-    {
       "otherEntityName": "joueur",
       "otherEntityRelationshipName": "quartier",
       "relationshipName": "joueur",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "complexe",
+      "otherEntityRelationshipName": "quartier",
+      "relationshipName": "complexe",
       "relationshipType": "one-to-many"
     },
     {
