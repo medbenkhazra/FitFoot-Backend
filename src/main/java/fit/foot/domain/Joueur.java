@@ -37,7 +37,7 @@ public class Joueur implements Serializable {
     @Column(name = "avatar_content_type")
     private String avatarContentType;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(unique = true)
     private User user;
 

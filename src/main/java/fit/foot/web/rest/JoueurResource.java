@@ -42,7 +42,9 @@ public class JoueurResource {
      * {@code POST  /joueurs} : Create a new joueur.
      *
      * @param joueur the joueur to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new joueur, or with status {@code 400 (Bad Request)} if the joueur has already an ID.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with
+     *         body the new joueur, or with status {@code 400 (Bad Request)} if the
+     *         joueur has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/joueurs")
@@ -61,11 +63,13 @@ public class JoueurResource {
     /**
      * {@code PUT  /joueurs/:id} : Updates an existing joueur.
      *
-     * @param id the id of the joueur to save.
+     * @param id     the id of the joueur to save.
      * @param joueur the joueur to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated joueur,
-     * or with status {@code 400 (Bad Request)} if the joueur is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the joueur couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated joueur,
+     *         or with status {@code 400 (Bad Request)} if the joueur is not valid,
+     *         or with status {@code 500 (Internal Server Error)} if the joueur
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/joueurs/{id}")
@@ -91,14 +95,17 @@ public class JoueurResource {
     }
 
     /**
-     * {@code PATCH  /joueurs/:id} : Partial updates given fields of an existing joueur, field will ignore if it is null
+     * {@code PATCH  /joueurs/:id} : Partial updates given fields of an existing
+     * joueur, field will ignore if it is null
      *
-     * @param id the id of the joueur to save.
+     * @param id     the id of the joueur to save.
      * @param joueur the joueur to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated joueur,
-     * or with status {@code 400 (Bad Request)} if the joueur is not valid,
-     * or with status {@code 404 (Not Found)} if the joueur is not found,
-     * or with status {@code 500 (Internal Server Error)} if the joueur couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated joueur,
+     *         or with status {@code 400 (Bad Request)} if the joueur is not valid,
+     *         or with status {@code 404 (Not Found)} if the joueur is not found,
+     *         or with status {@code 500 (Internal Server Error)} if the joueur
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/joueurs/{id}", consumes = { "application/json", "application/merge-patch+json" })
@@ -147,8 +154,10 @@ public class JoueurResource {
     /**
      * {@code GET  /joueurs} : get all the joueurs.
      *
-     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of joueurs in body.
+     * @param eagerload flag to eager load entities from relationships (This is
+     *                  applicable for many-to-many).
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list
+     *         of joueurs in body.
      */
     @GetMapping("/joueurs")
     public List<Joueur> getAllJoueurs(@RequestParam(required = false, defaultValue = "false") boolean eagerload) {
@@ -164,12 +173,20 @@ public class JoueurResource {
      * {@code GET  /joueurs/:id} : get the "id" joueur.
      *
      * @param id the id of the joueur to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the joueur, or with status {@code 404 (Not Found)}.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the joueur, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/joueurs/{id}")
     public ResponseEntity<Joueur> getJoueur(@PathVariable Long id) {
         log.debug("REST request to get Joueur : {}", id);
         Optional<Joueur> joueur = joueurRepository.findOneWithEagerRelationships(id);
+        return ResponseUtil.wrapOrNotFound(joueur);
+    }
+
+    @GetMapping("/joueurs/user/{id}")
+    public ResponseEntity<Joueur> getJoueurByUserId(@PathVariable Long id) {
+        log.debug("REST request to get Joueur : {}", id);
+        Optional<Joueur> joueur = joueurRepository.findByUserId(id);
         return ResponseUtil.wrapOrNotFound(joueur);
     }
 

@@ -48,12 +48,12 @@ public class Annonce implements Serializable {
     @JoinColumn(unique = true)
     private Terrain terrain;
 
-    @JsonIgnoreProperties(value = { "annonce", "joueurs" }, allowSetters = true)
+    @JsonIgnoreProperties(value = {}, allowSetters = true)
     @OneToOne(mappedBy = "annonce")
     private Equipe equipe;
 
     @ManyToOne
-    @JsonIgnoreProperties(value = { "user", "annonces", "equipes", "quartier" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "avatar", "annonces", "equipes", "quartier" }, allowSetters = true)
     private Joueur responsable;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here

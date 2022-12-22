@@ -53,6 +53,7 @@ public class AnnonceResource {
         if (annonce.getId() != null) {
             throw new BadRequestAlertException("A new annonce cannot already have an ID", ENTITY_NAME, "idexists");
         }
+        System.out.println(annonce);
         Annonce result = annonceRepository.save(annonce);
         return ResponseEntity
             .created(new URI("/api/annonces/" + result.getId()))

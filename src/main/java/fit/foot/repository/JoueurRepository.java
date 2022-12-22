@@ -28,4 +28,7 @@ public interface JoueurRepository extends JoueurRepositoryWithBagRelationships, 
     default Page<Joueur> findAllWithEagerRelationships(Pageable pageable) {
         return this.fetchBagRelationships(this.findAll(pageable));
     }
+
+    // find by user Id
+    Optional<Joueur> findByUserId(Long id);
 }
