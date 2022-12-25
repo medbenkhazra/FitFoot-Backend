@@ -26,7 +26,7 @@ public class Equipe implements Serializable {
     private Annonce annonce;
 
     @ManyToMany(mappedBy = "equipes")
-    @JsonIgnoreProperties(value = { "user", "annonces", "equipes", "quartier" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "user", "quartier" }, allowSetters = true)
     private Set<Joueur> joueurs = new HashSet<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
