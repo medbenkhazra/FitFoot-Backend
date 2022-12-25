@@ -1,0 +1,96 @@
+INSERT INTO FitFoot.ville (id,nom) VALUES
+	 (11,'AGADIR'),
+	 (12,'AIN CHOCK'),
+	 (13,'AL HOCEIMA'),
+	 (14,'AZILAL'),
+	 (15,'BEN M''SIK SIDI OTHMANE'),
+	 (16,'BENI MEKADA'),
+	 (17,'BENI MELLAL'),
+	 (18,'BENSLIMANE'),
+	 (19,'BERKANE');
+INSERT INTO FitFoot.ville (id,nom) VALUES
+	 (20,'BOUJDOUR'),
+	 (21,'BOULEMANE'),
+	 (22,'CASABLANCA ANFA'),
+	 (23,'CHEFCHAOUEN'),
+	 (24,'DAKHLA'),
+	 (25,'DERB SOLTANE-AL FIDA'),
+	 (26,'ELJADIDA'),
+	 (27,'EL KELAA DES SRAGHNA'),
+	 (28,'ERRACHIDIA'),
+	 (29,'ESSAOUIRA');
+INSERT INTO FitFoot.ville (id,nom) VALUES
+	 (30,'ESSEMARA'),
+	 (31,'FES'),
+	 (32,'FIGUIG'),
+	 (33,'GUELMIM'),
+	 (34,'HAY MOHAMMADI AIN SEBAA'),
+	 (35,'IFRANE'),
+	 (36,'KENITRA'),
+	 (37,'KHEMISSET'),
+	 (38,'KHENIFRA'),
+	 (39,'KHOURIBGA');
+INSERT INTO FitFoot.ville (id,nom) VALUES
+	 (40,'LAAYOUNE'),
+	 (41,'LARACHE'),
+	 (42,'MARRAKECH'),
+	 (43,'MEKNES'),
+	 (44,'MOHAMMADIA ZENATA'),
+	 (45,'NADOR'),
+	 (46,'OUARZAZATE'),
+	 (47,'OUJDA'),
+	 (48,'RABAT'),
+	 (49,'SAFI');
+INSERT INTO FitFoot.ville (id,nom) VALUES
+	 (50,'SALE'),
+	 (51,'SETTAT'),
+	 (52,'SIDI BERNOUSSI'),
+	 (53,'SIDI KACEM'),
+	 (54,'SKHIRATE TEMARA'),
+	 (55,'TANGER ASSILAH'),
+	 (56,'TANTAN'),
+	 (57,'TAOUNATE'),
+	 (58,'TAROUDANT'),
+	 (59,'TATA');
+INSERT INTO FitFoot.ville (id,nom) VALUES
+	 (60,'TAZA'),
+	 (61,'TETOUAN'),
+	 (62,'TIZNIT'),
+	 (63,'OUED DAHAB'),
+	 (64,'MEDIOUNA'),
+	 (65,'ASSA ZAG'),
+	 (66,'MDIQ FNIDQ'),
+	 (67,'MOHAMMADIA'),
+	 (68,'ZAGORA'),
+	 (69,'MOULAY RACHID');
+INSERT INTO FitFoot.ville (id,nom) VALUES
+	 (70,'CHTOUKA AIT BAHA'),
+	 (71,'EL KALAA DES SRAGHNAS'),
+	 (72,'EL HAJEB'),
+	 (73,'TAOURIRT'),
+	 (74,'EL HAOUZ'),
+	 (75,'JERADA'),
+	 (76,'NOUACEUR'),
+	 (77,'AOUSSERD'),
+	 (78,'SEFROU'),
+	 (79,'INEZGANE AIT MELLOUL');
+INSERT INTO FitFoot.ville (id,nom) VALUES
+	 (80,'CHICHAOUA'),
+	 (81,'FAHS ANJRA'),
+	 (82,'HAY HASSANI'),
+	 (83,'MOULAY YACOUB'),
+	 (84,'SIDI IFNI'),
+	 (85,'BERRECHID'),
+	 (86,'OUAZZANE'),
+	 (87,'TINGHIR'),
+	 (88,'GUERCIF'),
+	 (89,'SIDI SLIMANE');
+INSERT INTO FitFoot.ville (id,nom) VALUES
+	 (90,'FQUIH BEN SALAH'),
+	 (91,'TARFAYA'),
+	 (92,'DRIOUCH'),
+	 (93,'SIDI BENNOUR'),
+	 (94,'REHAMNA'),
+	 (95,'MIDELT'),
+	 (96,'YOUSSOUFIA'),
+	 (97,'CASABLANCA');
