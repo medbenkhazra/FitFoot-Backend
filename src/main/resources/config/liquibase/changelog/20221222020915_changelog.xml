@@ -20,15 +20,15 @@
     <changeSet author="Nyanpasu (generated)" id="1671674958819-10">
         <dropColumn columnName="annonce_id" tableName="equipe"/>
     </changeSet>
-    <changeSet author="Nyanpasu (generated)" id="1671674958819-1">
+    <!-- <changeSet author="Nyanpasu (generated)" id="1671674958819-1">
         <dropUniqueConstraint constraintName="UC_ANNONCETERRAIN_ID_COL" tableName="annonce"/>
-    </changeSet>
-    <changeSet author="Nyanpasu (generated)" id="1671674958819-2">
+    </changeSet> -->
+    <!-- <changeSet author="Nyanpasu (generated)" id="1671674958819-2">
         <addUniqueConstraint columnNames="terrain_id" constraintName="UC_ANNONCETERRAIN_ID_COL" tableName="annonce"/>
-    </changeSet>
-    <changeSet author="Nyanpasu (generated)" id="1671674958819-3">
+    </changeSet> -->
+    <!-- <changeSet author="Nyanpasu (generated)" id="1671674958819-3">
         <dropUniqueConstraint constraintName="UC_JHI_USERLOGIN_COL" tableName="jhi_user"/>
-    </changeSet>
+    </changeSet> -->
     <changeSet author="Nyanpasu (generated)" id="1671674958819-4">
         <addUniqueConstraint columnNames="login" constraintName="UC_JHI_USERLOGIN_COL" tableName="jhi_user"/>
     </changeSet>

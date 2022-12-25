@@ -30,5 +30,6 @@
     <include file="config/liquibase/changelog/20221205182324_added_entity_constraints_Terrain.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20221205182326_added_entity_constraints_Reservation.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
+    <include file="config/liquibase/changelog/20221222020915_changelog.xml" relativeToChangelogFile="false"/>
     <!-- jhipster-needle-liquibase-add-incremental-changelog - JHipster will add incremental liquibase changelogs here -->
 </databaseChangeLog>
