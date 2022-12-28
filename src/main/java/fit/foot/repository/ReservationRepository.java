@@ -1,6 +1,10 @@
 package fit.foot.repository;
 
 import fit.foot.domain.Reservation;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 
@@ -9,4 +13,8 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface ReservationRepository extends JpaRepository<Reservation, Long> {}
+public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+    Optional<Reservation> findByHeureDebutBeforeAndHeureFinAfter(ZonedDateTime heureDebut, ZonedDateTime heureFin);
+
+    List<Reservation> findByDate(LocalDate date);
+}

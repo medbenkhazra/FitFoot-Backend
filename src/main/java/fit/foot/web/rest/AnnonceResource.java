@@ -4,6 +4,7 @@ import fit.foot.domain.Annonce;
 import fit.foot.domain.Equipe;
 import fit.foot.domain.Joueur;
 import fit.foot.domain.Reservation;
+import fit.foot.domain.enumeration.STATUS;
 import fit.foot.repository.AnnonceRepository;
 import fit.foot.repository.EquipeRepository;
 import fit.foot.repository.JoueurRepository;
@@ -42,18 +43,18 @@ public class AnnonceResource {
     private final AnnonceRepository annonceRepository;
     private final EquipeRepository equipeRepository;
     private final JoueurRepository joueurRepository;
-    private final ReservationRepository reservationRepository;
+    private final ReservationResource reservationResource;
 
     public AnnonceResource(
         AnnonceRepository annonceRepository,
         EquipeRepository equipeRepository,
         JoueurRepository joueurRepository,
-        ReservationRepository reservationRepository
+        ReservationResource reservationResource
     ) {
         this.annonceRepository = annonceRepository;
         this.equipeRepository = equipeRepository;
         this.joueurRepository = joueurRepository;
-        this.reservationRepository = reservationRepository;
+        this.reservationResource = reservationResource;
     }
 
     /**
@@ -71,6 +72,15 @@ public class AnnonceResource {
         if (annonce.getId() != null) {
             throw new BadRequestAlertException("A new annonce cannot already have an ID", ENTITY_NAME, "idexists");
         }
+        // check if annonce heureDebut corresponds to one of the open time slots from
+        // reservationResource
+        if (!reservationResource.isTimeSlotAvailable(annonce.getHeureDebut(), annonce.getHeureFin())) {
+            throw new BadRequestAlertException(
+                "Annonce heureDebut does not correspond to one of the open time slots",
+                ENTITY_NAME,
+                "idexists"
+            );
+        }
         Equipe equipe = new Equipe();
         if (annonce.getResponsable().getEquipes() == null) {
             annonce.getResponsable().setEquipes(new HashSet<>());
@@ -78,9 +88,16 @@ public class AnnonceResource {
         annonce.getResponsable().addEquipe(equipe);
         equipe.addJoueur(annonce.getResponsable());
         annonce.setEquipe(equipe);
+        annonce.setStatus(STATUS.ENCOURS);
+        //saving many to many relationship
         equipeRepository.save(equipe);
         joueurRepository.save(annonce.getResponsable());
-
+        //saving reservation
+        Reservation reservation = new Reservation();
+        reservation.setTerrain(annonce.getTerrain());
+        reservation.setDate(annonce.getHeureDebut().toLocalDate());
+        reservation.setHeureDebut(annonce.getHeureDebut());
+        reservation.setHeureFin(annonce.getHeureFin());
         Annonce result = annonceRepository.save(annonce);
         return ResponseEntity
             .created(new URI("/api/annonces/" + result.getId()))
@@ -116,14 +133,10 @@ public class AnnonceResource {
         Equipe equipe = annonce.getEquipe();
         // if annoce is full book a reservation in the terrain of the annonce
         if (equipe.getJoueurs().size() == 2 * annonce.getNombreParEquipe() - 1) {
-            Reservation reservation = new Reservation();
-            reservation.setTerrain(annonce.getTerrain());
-            reservation.setDate(annonce.getHeureDebut().toLocalDate());
-            reservation.setHeureDebut(annonce.getHeureDebut());
-            reservation.setHeureFin(annonce.getHeureFin());
-            reservationRepository.save(reservation);
+            annonce.setStatus(STATUS.FEREME);
+            annonceRepository.save(annonce);
         }
-        if (equipe == null || equipe.getJoueurs().size() >= 2 * annonce.getNombreParEquipe()) {
+        if (equipe.getJoueurs().size() >= 2 * annonce.getNombreParEquipe()) {
             return ResponseEntity.badRequest().build();
         }
 
