@@ -10,9 +10,11 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.aspectj.weaver.patterns.ConcreteCflowPointcut.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -217,42 +219,35 @@ public class ReservationResource {
 
     // an endpoint that gets all the time slots available for a given date
     @GetMapping("/reservations/timeslots/{date}")
-    public List<TimeSlot> getTimeSlots(@PathVariable String date) {
+    public List<String> getTimeSlots(@PathVariable String date) {
         // get all the reservations for the given date
         List<Reservation> reservations = reservationRepository.findByDate(LocalDate.parse(date));
         // get all the time slots
         List<TimeSlot> timeSlots = Arrays.asList(TimeSlot.values());
         timeSlots = new ArrayList<>(timeSlots);
 
-        List<TimeSlot> timeSlotsToRemove = new ArrayList<>();
+        List<String> slots = new ArrayList<>();
 
         for (Reservation reservation : reservations) {
-            for (TimeSlot timeSlot : timeSlots) {
+            Iterator<TimeSlot> iterator = timeSlots.iterator();
+            while (iterator.hasNext()) {
+                TimeSlot timeSlot = iterator.next();
                 // if start time is between the start and end time of the TimeSlot remove it or they are equal
-
                 if (
                     timeSlot.getStartTime().isAfter(reservation.getHeureDebut().toLocalTime()) &&
                     timeSlot.getStartTime().isBefore(reservation.getHeureFin().toLocalTime()) ||
                     timeSlot.getStartTime().equals(reservation.getHeureDebut().toLocalTime()) ||
                     timeSlot.getStartTime().equals(reservation.getHeureFin().toLocalTime())
                 ) {
-                    timeSlotsToRemove.add(timeSlot);
+                    iterator.remove();
                 }
             }
         }
 
-        timeSlots.removeAll(timeSlotsToRemove);
-        // timeSlotsToRemove = new ArrayList<>();
-        // remove the time slots that are already reserved
-        // for (Reservation reservation : reservations) {
-        //     for (TimeSlot timeSlot : timeSlots) {
-        //         if (timeSlot.getStartTime().equals(reservation.getHeureDebut())
-        //                 && timeSlot.getEndTime().equals(reservation.getHeureFin())) {
-        //             timeSlots.remove(timeSlot);
-        //         }
-        //     }
-        // }
-        return timeSlots;
+        for (TimeSlot timeSlot : timeSlots) {
+            slots.add(timeSlot.getLabel());
+        }
+        return slots;
     }
 
     public boolean isTimeSlotAvailable(ZonedDateTime start, ZonedDateTime end) {

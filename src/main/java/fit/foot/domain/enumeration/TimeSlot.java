@@ -21,6 +21,10 @@ public enum TimeSlot {
         this.endTime = endTime;
     }
 
+    public String getLabel() {
+        return label;
+    }
+
     public LocalTime getStartTime() {
         return startTime;
     }
