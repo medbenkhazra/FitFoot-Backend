@@ -1,13 +1,11 @@
 variable "resource_group" {
   type        = string
   description = "The resource group"
-  default     = ""
 }
 
 variable "application_name" {
   type        = string
   description = "The name of your application"
-  default     = ""
 }
 
 variable "environment" {
@@ -19,27 +17,24 @@ variable "environment" {
 variable "location" {
   type        = string
   description = "The Azure region where all resources in this example should be created"
-  default     = ""
 }
 
-variable "administrator_login" {
+variable "database_username" {
   type        = string
-  description = "The MySQL administrator login"
-  default     = "myadmin"
+  description = "The database username"
 }
 
-variable "database_name" {
+variable "database_password" {
   type        = string
-  description = "The MySQL database name"
-  default     = "db"
-}
-
-variable "virtual_network_id" {
-  type        = string
-  description = "Azure Virtual Network ID"
+  description = "The database password"
 }
 
 variable "subnet_id" {
   type        = string
   description = "The subnet from which the access is allowed"
+}
+
+variable "myip" {
+  type        = string
+  description = "The IP address of the current client. It is required to provide access to this client to be able to create the secrets"
 }

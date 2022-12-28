@@ -7,25 +7,6 @@ terraform {
   }
 }
 
-resource "azurecaf_name" "container_registry" {
-  name          = var.application_name
-  resource_type = "azurerm_container_registry"
-  suffixes      = [var.environment]
-}
-
-resource "azurerm_container_registry" "container-registry" {
-  name                = azurecaf_name.container_registry.result
-  resource_group_name = var.resource_group
-  location            = var.location
-  admin_enabled       = true
-  sku                 = "Basic"
-
-  tags = {
-    "environment"      = var.environment
-    "application-name" = var.application_name
-  }
-}
-
 resource "azurecaf_name" "app_service_plan" {
   name          = var.application_name
   resource_type = "azurerm_app_service_plan"
@@ -68,24 +49,47 @@ resource "azurerm_linux_web_app" "application" {
 
   site_config {
     application_stack {
-      docker_image     = "${azurerm_container_registry.container-registry.name}.azurecr.io/${var.application_name}/${var.application_name}"
-      docker_image_tag = "latest"
+      java_server         = "JAVA"
+      java_server_version = "17"
+      java_version        = "java17"
     }
     always_on        = true
     ftps_state       = "FtpsOnly"
   }
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   app_settings = {
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
-    "DOCKER_REGISTRY_SERVER_URL"          = "https://${azurerm_container_registry.container-registry.name}.azurecr.io"
-    "DOCKER_REGISTRY_SERVER_USERNAME"     = azurerm_container_registry.container-registry.admin_username
-    "DOCKER_REGISTRY_SERVER_PASSWORD"     = azurerm_container_registry.container-registry.admin_password
-    "WEBSITES_PORT"                       = "8080"
+
+    // Monitoring with Azure Application Insights
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = var.azure_application_insights_instrumentation_key
 
     # These are app specific environment variables
+    "SPRING_PROFILES_ACTIVE" = "prod,azure"
 
-    "DATABASE_URL"      = var.database_url
-    "DATABASE_USERNAME" = var.database_username
-    "DATABASE_PASSWORD" = var.database_password
+    "SPRING_DATASOURCE_URL"      = "jdbc:mysql://${var.database_url}?useUnicode=true&characterEncoding=utf8&useSSL=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+    "SPRING_DATASOURCE_USERNAME" = var.database_username
+    "SPRING_DATASOURCE_PASSWORD" = var.database_password
   }
+}
+
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_key_vault_access_policy" "application" {
+  key_vault_id = var.vault_id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_linux_web_app.application.identity[0].principal_id
+
+  secret_permissions = [
+    "Get",
+    "List"
+  ]
+}
+
+resource "azurerm_app_service_virtual_network_swift_connection" "swift_connection" {
+  app_service_id = azurerm_linux_web_app.application.id
+  subnet_id      = var.subnet_id
 }
