@@ -19,5 +19,23 @@ variable "environment" {
 variable "location" {
   type        = string
   description = "The Azure region where all resources in this example should be created"
-  default     = "francecentral"
+  default     = "westeurope"
+}
+
+variable "address_space" {
+  type        = string
+  description = "Virtual Network address space"
+  default     = "10.11.0.0/16"
+}
+
+variable "app_subnet_prefix" {
+  type        = string
+  description = "Application subnet prefix"
+  default     = "10.11.0.0/24"
+}
+
+variable "database_subnet_prefix" {
+  type        = string
+  description = "Database subnet prefix"
+  default     = "10.11.1.0/24"
 }
