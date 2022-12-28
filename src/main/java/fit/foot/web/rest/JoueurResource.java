@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.HeaderUtil;
@@ -183,10 +185,10 @@ public class JoueurResource {
         return ResponseUtil.wrapOrNotFound(joueur);
     }
 
-    @GetMapping("/joueurs/user/{id}")
-    public ResponseEntity<Joueur> getJoueurByUserId(@PathVariable Long id) {
-        log.debug("REST request to get Joueur : {}", id);
-        Optional<Joueur> joueur = joueurRepository.findByUserId(id);
+    @GetMapping("/joueurs/user")
+    public ResponseEntity<Joueur> getJoueurByUserId() {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Optional<Joueur> joueur = joueurRepository.findByUserLogin(user.getUsername());
         return ResponseUtil.wrapOrNotFound(joueur);
     }
 

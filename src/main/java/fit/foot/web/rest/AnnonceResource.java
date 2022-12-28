@@ -16,10 +16,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.HeaderUtil;
@@ -89,10 +92,10 @@ public class AnnonceResource {
         equipe.addJoueur(annonce.getResponsable());
         annonce.setEquipe(equipe);
         annonce.setStatus(STATUS.ENCOURS);
-        //saving many to many relationship
+        // saving many to many relationship
         equipeRepository.save(equipe);
         joueurRepository.save(annonce.getResponsable());
-        //saving reservation
+        // saving reservation
         Reservation reservation = new Reservation();
         reservation.setTerrain(annonce.getTerrain());
         reservation.setDate(annonce.getHeureDebut().toLocalDate());
@@ -261,6 +264,32 @@ public class AnnonceResource {
     public List<Annonce> getAllAnnonces() {
         log.debug("REST request to get all Annonces");
         return annonceRepository.findAll();
+    }
+
+    @GetMapping("/annonces/responsable")
+    public List<Annonce> getByResponsable() {
+        // get user from security context
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        // using the user id to get the joueur
+        Optional<Joueur> joueur = joueurRepository.findByUserLogin(user.getUsername());
+        return annonceRepository.findByResponsableIdOrderByHeureDebutDesc(joueur.get().getId());
+    }
+
+    @GetMapping("/annonces/participation")
+    public Set<Annonce> getByParticipation() {
+        // get user from security context
+        Set<Annonce> annonces = new HashSet<>();
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        // using the user id to get the joueur
+        Optional<Joueur> joueur = joueurRepository.findByUserLogin(user.getUsername());
+        joueur
+            .get()
+            .getEquipes()
+            .forEach(p -> {
+                annonces.add(p.getAnnonce());
+            });
+        log.debug("REST request to get all Annonces {}", annonces);
+        return annonces;
     }
 
     /**

@@ -31,4 +31,5 @@ public interface JoueurRepository extends JoueurRepositoryWithBagRelationships, 
 
     // find by user Id
     Optional<Joueur> findByUserId(Long id);
+    Optional<Joueur> findByUserLogin(String login);
 }
