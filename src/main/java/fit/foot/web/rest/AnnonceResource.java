@@ -98,6 +98,7 @@ public class AnnonceResource {
         reservation.setDate(annonce.getHeureDebut().toLocalDate());
         reservation.setHeureDebut(annonce.getHeureDebut());
         reservation.setHeureFin(annonce.getHeureFin());
+        reservationResource.createReservation(reservation);
         Annonce result = annonceRepository.save(annonce);
         return ResponseEntity
             .created(new URI("/api/annonces/" + result.getId()))

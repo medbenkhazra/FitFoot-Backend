@@ -16,5 +16,5 @@ import org.springframework.stereotype.Repository;
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     Optional<Reservation> findByHeureDebutBeforeAndHeureFinAfter(ZonedDateTime heureDebut, ZonedDateTime heureFin);
 
-    List<Reservation> findByDate(LocalDate date);
+    List<Reservation> findByDateAndTerrainId(LocalDate parse, Long terrainId);
 }

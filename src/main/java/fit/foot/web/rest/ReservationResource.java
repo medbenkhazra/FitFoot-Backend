@@ -218,10 +218,10 @@ public class ReservationResource {
     }
 
     // an endpoint that gets all the time slots available for a given date
-    @GetMapping("/reservations/timeslots/{date}")
-    public List<String> getTimeSlots(@PathVariable String date) {
+    @GetMapping("/reservations/timeslots/{date}/{terrainId}")
+    public List<String> getTimeSlots(@PathVariable String date, @PathVariable Long terrainId) {
         // get all the reservations for the given date
-        List<Reservation> reservations = reservationRepository.findByDate(LocalDate.parse(date));
+        List<Reservation> reservations = reservationRepository.findByDateAndTerrainId(LocalDate.parse(date), terrainId);
         // get all the time slots
         List<TimeSlot> timeSlots = Arrays.asList(TimeSlot.values());
         timeSlots = new ArrayList<>(timeSlots);
@@ -253,7 +253,7 @@ public class ReservationResource {
     public boolean isTimeSlotAvailable(ZonedDateTime start, ZonedDateTime end) {
         // check if the time slot is valid and not in the past
         if (start.isBefore(ZonedDateTime.now()) || end.isBefore(ZonedDateTime.now())) {
-            throw new BadRequestAlertException("Invalid time slot", ENTITY_NAME, "timeslotinvalid");
+            throw new BadRequestAlertException("s'il bous plait selectionner une temp dans le futur", ENTITY_NAME, "timeslotinvalid");
         }
         // Check if the time slot overlaps with any existing reservations
         Optional<Reservation> reservations = reservationRepository.findByHeureDebutBeforeAndHeureFinAfter(end, start);

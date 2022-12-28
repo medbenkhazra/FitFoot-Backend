@@ -3,13 +3,13 @@ package fit.foot.domain.enumeration;
 import java.time.LocalTime;
 
 public enum TimeSlot {
-    SLOT_8_10("8:00-10:00", LocalTime.of(8, 0), LocalTime.of(10, 0)),
-    SLOT_10_12("10:00-12:00", LocalTime.of(10, 0), LocalTime.of(12, 0)),
-    SLOT_12_14("12:00-14:00", LocalTime.of(12, 0), LocalTime.of(14, 0)),
-    SLOT_14_16("14:00-16:00", LocalTime.of(14, 0), LocalTime.of(16, 0)),
-    SLOT_16_18("16:00-18:00", LocalTime.of(16, 0), LocalTime.of(18, 0)),
-    SLOT_18_20("18:00-20:00", LocalTime.of(18, 0), LocalTime.of(20, 0)),
-    SLOT_20_22("20:00-22:00", LocalTime.of(20, 0), LocalTime.of(22, 0));
+    SLOT_8_10("08:00-10:00", LocalTime.of(7, 0), LocalTime.of(9, 0)),
+    SLOT_10_12("10:00-12:00", LocalTime.of(9, 0), LocalTime.of(11, 0)),
+    SLOT_12_14("12:00-14:00", LocalTime.of(11, 0), LocalTime.of(13, 0)),
+    SLOT_14_16("14:00-16:00", LocalTime.of(13, 0), LocalTime.of(15, 0)),
+    SLOT_16_18("16:00-18:00", LocalTime.of(15, 0), LocalTime.of(17, 0)),
+    SLOT_18_20("18:00-20:00", LocalTime.of(17, 0), LocalTime.of(19, 0)),
+    SLOT_20_22("20:00-22:00", LocalTime.of(19, 0), LocalTime.of(21, 0));
 
     private final String label;
     private final LocalTime startTime;
