@@ -12,7 +12,7 @@ jobs:
     
     - uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        creds: {"clientId": "11bbd82c-d536-40fd-9f1a-c8b17df8ec0b","clientSecret": "omU8Q~Z_VMz4221x-hiU3xlA1kIBMc3Q21X7SbS9","subscriptionId": "1bdb8d41-48c3-4505-a2c4-9304c94c840f","tenantId": "f93d5f40-88c0-4650-b8f2-cc4ec3ef6a10","activeDirectoryEndpointUrl": "https://login.microsoftonline.com","resourceManagerEndpointUrl": "https://management.azure.com/","activeDirectoryGraphResourceId": "https://graph.windows.net/","sqlManagementEndpointUrl": "https://management.core.windows.net:8443/","galleryEndpointUrl": "https://gallery.azure.com/","managementEndpointUrl": "https://management.core.windows.net/"}
     
     - run: |
         az webapp list --query "[?state=='Running']"
