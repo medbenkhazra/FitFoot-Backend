@@ -22,7 +22,7 @@ resource "random_password" "password" {
 resource "azurerm_mysql_flexible_server" "database" {
   name                = fitfootdb
   resource_group_name = rg-terraform-001
-  location            = West Europe
+  location            = westeurope
 
   administrator_login    = fitfootAdmin
   administrator_password = iir5Emsi
