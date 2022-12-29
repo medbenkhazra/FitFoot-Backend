@@ -20,7 +20,7 @@ resource "random_password" "password" {
 }
 
 resource "azurerm_mysql_flexible_server" "database" {
-  name                = "fitfootMySql"
+  name                = "fitfoot-mysql"
   resource_group_name = var.resource_group
   location            = var.location
 
