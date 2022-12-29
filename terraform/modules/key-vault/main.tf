@@ -65,23 +65,7 @@ resource "azurerm_key_vault_access_policy" "client" {
     "Restore"
   ]
 
-  certificate_permissions = [
-    "Get",
-    "Update",
-    "Create",
-    "Import",
-    "List",
-    "Delete",
-    "Recover",
-    "Backup",
-    "Restore",
-    "Deleteissuers",
-    "Getissuers", 
-    "Listissuers", 
-    "Managecontacts", 
-    "Manageissuers", 
-    "Setissuers"
-  ]
+
 }
 
 resource "azurerm_key_vault_secret" "database_username" {
