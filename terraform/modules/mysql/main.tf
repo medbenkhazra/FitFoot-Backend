@@ -20,12 +20,12 @@ resource "random_password" "password" {
 }
 
 resource "azurerm_mysql_flexible_server" "database" {
-  name                = fitfootdb
-  resource_group_name = rg-terraform-001
-  location            = westeurope
+  name                = azurecaf_name.mysql_server.result
+  resource_group_name = var.resource_group
+  location            = var.location
 
-  administrator_login    = fitfootAdmin
-  administrator_password = iir5Emsi
+  administrator_login    = var.administrator_login
+  administrator_password = random_password.password.result
 
   sku_name                     = "B_Standard_B1ms"
   version                      = "8.0.21"

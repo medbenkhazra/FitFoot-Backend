@@ -1,7 +1,7 @@
 variable "application_name" {
   type        = string
   description = "The name of your application"
-  default     = "fitfoot"
+  default     = "rg-terraform-001"
 }
 
 variable "terraform_storage_account" {
