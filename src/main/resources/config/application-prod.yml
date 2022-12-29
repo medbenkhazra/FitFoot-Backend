@@ -52,9 +52,9 @@ spring:
       # it can be set to any label, branch or commit of the configuration source Git repository
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://localhost:3306/FitFoot?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=UTC&createDatabaseIfNotExist=true
+    url: jdbc:mysql://root:DhQzH5Mg5CbgQc2Xu8O3@containers-us-west-180.railway.app:7462/railway
     username: root
-    password:
+    password: DhQzH5Mg5CbgQc2Xu8O3
     hikari:
       poolName: Hikari
       auto-commit: false
@@ -66,7 +66,8 @@ spring:
   jpa:
   # Replace by 'prod, faker' to add the faker context and have sample data loaded in production
   liquibase:
-    contexts: prod
+    contexts: prod, faker
+    url: jdbc:mysql://root:DhQzH5Mg5CbgQc2Xu8O3@containers-us-west-180.railway.app:7462/railway
   mail:
     host: localhost
     port: 25
