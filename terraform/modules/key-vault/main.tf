@@ -30,15 +30,15 @@ resource "azurerm_key_vault" "application" {
 
 
      key_permissions = [
-"get","list","update","create","import","delete","recover","backup","restore",
+"get","list","update","create","import","delete","recover","backup",
      ]
 
 secret_permissions = [
-  "get","list","delete","recover","backup","restore","set",
+  "get","list","delete","recover","backup","restore",
      ]
 
 certificate_permissions = [
-  "get","list","update","create","import","delete","recover","backup","restore", "deleteissuers", "getissuers", "listissuers", "managecontacts", "manageissuers", "setissuers",
+  "get","list","update","create","import","delete","recover","backup","restore", "deleteissuers", "getissuers", "listissuers", "managecontacts", "manageissuers", 
 ]
   }
 
