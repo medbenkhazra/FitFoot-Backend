@@ -88,8 +88,3 @@ resource "azurerm_key_vault_access_policy" "application" {
     "List"
   ]
 }
-
-resource "azurerm_app_service_virtual_network_swift_connection" "swift_connection" {
-  app_service_id = azurerm_linux_web_app.application.id
-  subnet_id      = var.subnet_id
-}

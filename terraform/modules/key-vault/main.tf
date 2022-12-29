@@ -24,30 +24,6 @@ resource "azurerm_key_vault" "application" {
   soft_delete_retention_days = 90
 
   sku_name = "standard"
-    access_policy {
-     tenant_id = "${data.azurerm_client_config.current.tenant_id}"
-     object_id = "${data.azurerm_client_config.current.object_id}"
-
-
-     key_permissions = [
-"get","list","update","create","import","delete","recover","backup",
-     ]
-
-secret_permissions = [
-  "get","list","delete","recover","backup","restore",
-     ]
-
-certificate_permissions = [
-  "get","list","update","create","import","delete","recover","backup","restore", "deleteissuers", "getissuers", "listissuers", "managecontacts", "manageissuers", 
-]
-  }
-
-  network_acls {
-    default_action             = "Deny"
-    bypass                     = "None"
-    virtual_network_subnet_ids = [var.subnet_id]
-    ip_rules                   = [var.myip]
-  }
 
   tags = {
     "environment"      = var.environment
@@ -60,29 +36,12 @@ resource "azurerm_key_vault_access_policy" "client" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = data.azurerm_client_config.current.object_id
 
-  key_permissions = [
-    "Get",
-    "Update",
-    "Create",
-    "Import",
-    "List",
-    "Delete",
-    "Recover",
-    "Backup",
-    "Restore"
-  ]
-
   secret_permissions = [
     "Set",
     "Get",
     "List",
-    "Delete",
-    "Recover",
-    "Backup",
-    "Restore"
+    "Delete"
   ]
-
-
 }
 
 resource "azurerm_key_vault_secret" "database_username" {
