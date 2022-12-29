@@ -16,7 +16,7 @@ resource "azurecaf_name" "key_vault" {
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "application" {
-  name                = azurecaf_name.key_vault.result
+  name                = "fitfootpfa-54546468122"
   resource_group_name = var.resource_group
   location            = var.location
 
