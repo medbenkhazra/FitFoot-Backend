@@ -50,12 +50,10 @@ module "application" {
   location         = var.location
 
   database_url      = module.database.database_url
-  database_username = "@Microsoft.KeyVault(SecretUri=${module.key-vault.vault_uri}secrets/database-username)"
-  database_password = "@Microsoft.KeyVault(SecretUri=${module.key-vault.vault_uri}secrets/database-password)"
+  database_username = module.database.database_username
+  database_password = module.database.database_password
 
   azure_application_insights_instrumentation_key = module.application-insights.azure_application_insights_instrumentation_key
-
-  vault_id = module.key-vault.vault_id
 }
 
 module "database" {
@@ -72,15 +70,4 @@ module "application-insights" {
   application_name = var.application_name
   environment      = local.environment
   location         = var.location
-}
-
-module "key-vault" {
-  source           = "./modules/key-vault"
-  resource_group   = azurerm_resource_group.main.name
-  application_name = var.application_name
-  environment      = local.environment
-  location         = var.location
-
-  database_username = module.database.database_username
-  database_password = module.database.database_password
 }

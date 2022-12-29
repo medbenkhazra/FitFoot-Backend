@@ -38,8 +38,3 @@ variable "azure_application_insights_instrumentation_key" {
   type        = string
   description = "The Azure Application Insights instrumentation key"
 }
-
-variable "vault_id" {
-  type        = string
-  description = "The Azure Key Vault ID"
-}
