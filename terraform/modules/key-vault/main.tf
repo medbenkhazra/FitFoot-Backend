@@ -13,6 +13,24 @@ resource "azurecaf_name" "key_vault" {
   suffixes      = [var.environment]
 }
 
+  access_policy {
+     tenant_id = "${data.azurerm_client_config.current.tenant_id}"
+     object_id = "${data.azurerm_client_config.current.service_principal_object_id}"
+
+
+     key_permissions = [
+"get","list","update","create","import","delete","recover","backup","restore",
+     ]
+
+secret_permissions = [
+  "get","list","delete","recover","backup","restore","set",
+     ]
+
+certificate_permissions = [
+  "get","list","update","create","import","delete","recover","backup","restore", "deleteissuers", "getissuers", "listissuers", "managecontacts", "manageissuers", "setissuers",
+]
+  }
+
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "application" {
