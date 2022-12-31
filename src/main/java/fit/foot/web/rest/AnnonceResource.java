@@ -8,7 +8,6 @@ import fit.foot.domain.enumeration.STATUS;
 import fit.foot.repository.AnnonceRepository;
 import fit.foot.repository.EquipeRepository;
 import fit.foot.repository.JoueurRepository;
-import fit.foot.repository.ReservationRepository;
 import fit.foot.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -95,13 +94,6 @@ public class AnnonceResource {
         // saving many to many relationship
         equipeRepository.save(equipe);
         joueurRepository.save(annonce.getResponsable());
-        // saving reservation
-        Reservation reservation = new Reservation();
-        reservation.setTerrain(annonce.getTerrain());
-        reservation.setDate(annonce.getHeureDebut().toLocalDate());
-        reservation.setHeureDebut(annonce.getHeureDebut());
-        reservation.setHeureFin(annonce.getHeureFin());
-        reservationResource.createReservation(reservation);
         Annonce result = annonceRepository.save(annonce);
         return ResponseEntity
             .created(new URI("/api/annonces/" + result.getId()))
@@ -113,7 +105,7 @@ public class AnnonceResource {
     public ResponseEntity<Annonce> join(
         @PathVariable(value = "id", required = false) final Long id,
         @PathVariable(value = "userId", required = false) final Long userId
-    ) {
+    ) throws URISyntaxException, IllegalArgumentException {
         log.debug("REST request to join Annonce : {}, {}", id, userId);
 
         // Vérifier que l'ID de l'annonce et de l'utilisateur sont présents
@@ -123,6 +115,7 @@ public class AnnonceResource {
 
         // Récupérer l'annonce et le joueur à partir de leurs ID respectifs
         Optional<Annonce> annonceOptional = annonceRepository.findById(id);
+
         Optional<Joueur> joueurOptional = joueurRepository.findByUserId(userId);
 
         // Vérifier que l'annonce et le joueur existent
@@ -130,18 +123,37 @@ public class AnnonceResource {
             return ResponseEntity.notFound().build();
         }
 
-        Annonce annonce = annonceOptional.get();
         Joueur joueur = joueurOptional.get();
+        Annonce annonce = annonceOptional.get();
 
         // Vérifier que l'équipe existe et qu'elle n'est pas déjà complète
         Equipe equipe = annonce.getEquipe();
+
         // if annoce is full book a reservation in the terrain of the annonce
+        if (equipe == null) {
+            equipe = new Equipe();
+            annonce.setEquipe(equipe);
+        }
+        if (annonce.getStatus() == STATUS.FEREME) {
+            if (equipe.getJoueurs().size() < 2 * annonce.getNombreParEquipe()) {
+                throw new BadRequestAlertException("Veuillez changer le terrain ou l'horaire", ENTITY_NAME, "reservation pas disponible");
+            }
+            // check if annonce heureDebut corresponds to one of the open time slots from
+            // reservationResource
+            throw new BadRequestAlertException("Les deux équipes sont complet ", ENTITY_NAME, "annoce complète");
+        }
+
         if (equipe.getJoueurs().size() == 2 * annonce.getNombreParEquipe() - 1) {
             annonce.setStatus(STATUS.FEREME);
+            // saving reservation
+            Reservation reservation = new Reservation();
+            reservation.setTerrain(annonce.getTerrain());
+            reservation.setDate(annonce.getHeureDebut().toLocalDate());
+            reservation.setHeureDebut(annonce.getHeureDebut());
+            reservation.setHeureFin(annonce.getHeureFin());
+            // timeslot checking happense in the reservationResource
+            reservationResource.createReservation(reservation);
             annonceRepository.save(annonce);
-        }
-        if (equipe.getJoueurs().size() >= 2 * annonce.getNombreParEquipe()) {
-            return ResponseEntity.badRequest().build();
         }
 
         // Mettre à jour l'équipe et l'annonce
@@ -180,7 +192,17 @@ public class AnnonceResource {
         if (!annonceRepository.existsById(id)) {
             throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
         }
-
+        // if annoce is status ferme then throw a methode not allowed exception
+        if (annonce.getStatus() == STATUS.FEREME) {
+            throw new BadRequestAlertException("Annonce is already closed", ENTITY_NAME, "annonceclosed");
+        }
+        if (!reservationResource.isTimeSlotAvailable(annonce.getHeureDebut(), annonce.getHeureFin())) {
+            throw new BadRequestAlertException(
+                "Annonce heureDebut does not correspond to one of the open time slots",
+                ENTITY_NAME,
+                "idexists"
+            );
+        }
         Annonce result = annonceRepository.save(annonce);
         return ResponseEntity
             .ok()

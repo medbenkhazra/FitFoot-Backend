@@ -55,7 +55,8 @@ public class ReservationResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/reservations")
-    public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) throws URISyntaxException {
+    public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation)
+        throws URISyntaxException, IllegalArgumentException {
         log.debug("REST request to save Reservation : {}", reservation);
         if (reservation.getId() != null) {
             throw new BadRequestAlertException("A new reservation cannot already have an ID", ENTITY_NAME, "idexists");
@@ -253,7 +254,7 @@ public class ReservationResource {
     public boolean isTimeSlotAvailable(ZonedDateTime start, ZonedDateTime end) {
         // check if the time slot is valid and not in the past
         if (start.isBefore(ZonedDateTime.now()) || end.isBefore(ZonedDateTime.now())) {
-            throw new BadRequestAlertException("s'il bous plait selectionner une temp dans le futur", ENTITY_NAME, "timeslotinvalid");
+            throw new BadRequestAlertException("s'il bous plait selectionner une temp dans le future", ENTITY_NAME, "timeslotinvalid");
         }
         // Check if the time slot overlaps with any existing reservations
         Optional<Reservation> reservations = reservationRepository.findByHeureDebutBeforeAndHeureFinAfter(end, start);
@@ -267,6 +268,6 @@ public class ReservationResource {
         if (!isTimeSlot) {
             throw new BadRequestAlertException("Invalid time slot", ENTITY_NAME, "timeslotinvalid");
         }
-        return isTimeSlot && (!reservations.isPresent());
+        return (!reservations.isPresent());
     }
 }

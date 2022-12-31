@@ -1,0 +1,116 @@
+application {
+  config {
+    applicationType monolith
+    authenticationType jwt
+    baseName FitFoot
+    blueprints []
+    buildTool maven
+    cacheProvider no
+    clientFramework angularX
+    clientPackageManager npm
+    clientTheme lux
+    clientThemeVariant dark
+    creationTimestamp 1670264377849
+    databaseType sql
+    devDatabaseType mysql
+    dtoSuffix DTO
+    enableGradleEnterprise false
+    enableHibernateCache false
+    enableSwaggerCodegen false
+    enableTranslation true
+    gradleEnterpriseHost ""
+    jhiPrefix jhi
+    jhipsterVersion "7.9.3"
+    jwtSecretKey "ODA5MmU4NGE2YWIxMTU0ZWRjMDFjMTk2Y2NlYzllNjRkNTQ1MDg0MGFiODgxNGQxOGQ4MjEyZjc4YTU2MzkxNTcwMTM4NWYzZWE2NzZhMWM3YzhlOTBhMGE5MTA3ZDE4NTYzYmYwODgzZjg3NjgwZTI5OThhNDJlZjgxMDlkMWY="
+    languages [en, ar-ly, fr]
+    messageBroker false
+    microfrontend false
+    microfrontends []
+    nativeLanguage en
+    otherModules []
+    packageName fit.foot
+    prodDatabaseType mysql
+    reactive false
+    searchEngine false
+    serverPort 8080
+    serviceDiscoveryType eureka
+    skipClient false
+    skipUserManagement false
+    testFrameworks []
+    websocket false
+    withAdminUi true
+  }
+
+  entities Annonce, Complexe, Equipe, Joueur, Proprietaire, Quartier, Reservation, Terrain, Ville
+}
+
+entity Annonce {
+  description String
+  heureDebut ZonedDateTime
+  heureFin ZonedDateTime
+  duree Integer
+  validation Boolean
+  nombreParEquipe Integer
+  status STATUS
+}
+entity Complexe {
+  nom String
+  longitude Double
+  latitude Double
+}
+entity Equipe
+entity Joueur {
+  birthDay LocalDate
+  gender GENDER
+  avatar ImageBlob
+}
+entity Proprietaire {
+  avatar ImageBlob
+  cin String
+  rib String
+  numTel String
+}
+entity Quartier {
+  nom String
+}
+entity Reservation {
+  date LocalDate
+  heureDebut ZonedDateTime
+  heureFin ZonedDateTime
+}
+entity Terrain {
+  nom String
+  capaciteParEquipe Integer
+}
+entity Ville {
+  nom String
+}
+enum STATUS {
+  OUVERT,
+  FEREME,
+  ENCOURS
+}
+enum GENDER {
+  MALE,
+  FEMALE
+}
+
+relationship OneToOne {
+  Annonce{equipe} to Equipe{annonce}
+  Annonce{terrain} to Terrain{annonce}
+  Joueur{user} to User
+  Proprietaire{user} to User
+}
+relationship OneToMany {
+  Joueur{annonces} to Annonce{responsable}
+  Quartier{complexe} to Complexe{quartier}
+  Proprietaire{complexe} to Complexe{proprietaire}
+  Quartier{joueur} to Joueur{quartier}
+  Ville{quartier} to Quartier{ville}
+  Terrain{reservation} to Reservation{terrain}
+  Complexe{terrain} to Terrain{complexe}
+}
+relationship ManyToMany {
+  Joueur{equipe} to Equipe{joueur}
+}
+
