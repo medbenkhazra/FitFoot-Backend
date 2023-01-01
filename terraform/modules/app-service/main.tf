@@ -8,7 +8,7 @@ terraform {
 }
 
 resource "azurecaf_name" "app_service_plan" {
-  name          = var.application_name
+  name          = "jhipstercloud"
   resource_type = "azurerm_app_service_plan"
   suffixes      = [var.environment]
 }
