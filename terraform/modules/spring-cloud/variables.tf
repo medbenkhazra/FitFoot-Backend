@@ -19,22 +19,22 @@ variable "location" {
   description = "The Azure region where all resources in this example should be created"
 }
 
-variable "address_space" {
+variable "database_url" {
   type        = string
-  description = "VNet address space"
+  description = "The URL to the database"
 }
 
-variable "app_subnet_prefix" {
+variable "azure_application_insights_connection_string" {
   type        = string
-  description = "Application subnet prefix"
+  description = "The Azure Application Insights connection string"
 }
 
-variable "service_endpoints" {
-  type        = list(string)
-  description = "Service endpoints used by the solution"
+variable "vault_id" {
+  type        = string
+  description = "The Azure Key Vault ID"
 }
 
-variable "database_subnet_prefix" {
+variable "vault_uri" {
   type        = string
-  description = "Azure Database subnet prefix"
+  description = "The Azure Key Vault URI"
 }

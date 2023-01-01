@@ -19,7 +19,7 @@ resource "azurerm_service_plan" "application" {
   resource_group_name = var.resource_group
   location            = var.location
 
-  sku_name = "S1"
+  sku_name = "B1"
   os_type  = "Linux"
 
   tags = {
@@ -57,15 +57,8 @@ resource "azurerm_linux_web_app" "application" {
     ftps_state       = "FtpsOnly"
   }
 
-  identity {
-    type = "SystemAssigned"
-  }
-
   app_settings = {
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
-
-    // Monitoring with Azure Application Insights
-    "APPINSIGHTS_INSTRUMENTATIONKEY" = var.azure_application_insights_instrumentation_key
 
     # These are app specific environment variables
     "SPRING_PROFILES_ACTIVE" = "prod,azure"
@@ -74,22 +67,4 @@ resource "azurerm_linux_web_app" "application" {
     "SPRING_DATASOURCE_USERNAME" = var.database_username
     "SPRING_DATASOURCE_PASSWORD" = var.database_password
   }
-}
-
-data "azurerm_client_config" "current" {}
-
-resource "azurerm_key_vault_access_policy" "application" {
-  key_vault_id = var.vault_id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = azurerm_linux_web_app.application.identity[0].principal_id
-
-  secret_permissions = [
-    "Get",
-    "List"
-  ]
-}
-
-resource "azurerm_app_service_virtual_network_swift_connection" "swift_connection" {
-  app_service_id = azurerm_linux_web_app.application.id
-  subnet_id      = var.subnet_id
 }

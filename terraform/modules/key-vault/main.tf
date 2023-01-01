@@ -25,13 +25,6 @@ resource "azurerm_key_vault" "application" {
 
   sku_name = "standard"
 
-  network_acls {
-    default_action             = "Deny"
-    bypass                     = "None"
-    virtual_network_subnet_ids = [var.subnet_id]
-    ip_rules                   = [var.myip]
-  }
-
   tags = {
     "environment"      = var.environment
     "application-name" = var.application_name

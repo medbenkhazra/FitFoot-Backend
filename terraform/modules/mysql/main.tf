@@ -31,9 +31,6 @@ resource "azurerm_mysql_flexible_server" "database" {
   version                      = "8.0.21"
   backup_retention_days        = 7
   geo_redundant_backup_enabled = false
-  delegated_subnet_id          = var.subnet_id
-  private_dns_zone_id          = azurerm_private_dns_zone.database.id
-  depends_on                   = [azurerm_private_dns_zone_virtual_network_link.database]
 
   tags = {
     "environment"      = var.environment
@@ -49,20 +46,17 @@ resource "azurerm_mysql_flexible_database" "database" {
   collation           = "utf8_unicode_ci"
 }
 
-resource "azurerm_private_dns_zone" "database" {
-  name                = "db1.private.mysql.database.azure.com"
-  resource_group_name = var.resource_group
-}
-
-resource "azurecaf_name" "private_dns_zone_virtual_network_link" {
+resource "azurecaf_name" "mysql_firewall_rule" {
   name          = var.application_name
-  resource_type = "azurerm_private_dns_zone_virtual_network_link"
+  resource_type = "azurerm_mysql_firewall_rule"
   suffixes      = [var.environment]
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "database" {
-  name                  = azurecaf_name.private_dns_zone_virtual_network_link.result
-  resource_group_name   = var.resource_group
-  private_dns_zone_name = azurerm_private_dns_zone.database.name
-  virtual_network_id    = var.virtual_network_id
+# This rule is to enable the 'Allow access to Azure services' checkbox
+resource "azurerm_mysql_flexible_server_firewall_rule" "database" {
+  name                = azurecaf_name.mysql_firewall_rule.result
+  resource_group_name = var.resource_group
+  server_name         = azurerm_mysql_flexible_server.database.name
+  start_ip_address    = "0.0.0.0"
+  end_ip_address      = "0.0.0.0"
 }

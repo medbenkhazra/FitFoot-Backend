@@ -28,13 +28,3 @@ variable "database_password" {
   type        = string
   description = "The database password"
 }
-
-variable "subnet_id" {
-  type        = string
-  description = "The subnet from which the access is allowed"
-}
-
-variable "myip" {
-  type        = string
-  description = "The IP address of the current client. It is required to provide access to this client to be able to create the secrets"
-}
