@@ -36,7 +36,7 @@ resource "azurecaf_name" "app_service" {
 
 # This creates the service definition
 resource "azurerm_linux_web_app" "application" {
-  name                = azurecaf_name.app_service.result
+  name                = "fit"
   resource_group_name = var.resource_group
   location            = var.location
   service_plan_id     = azurerm_service_plan.application.id
