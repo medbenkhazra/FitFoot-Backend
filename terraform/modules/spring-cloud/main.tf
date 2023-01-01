@@ -6,7 +6,7 @@ locals {
 
 # This creates the Azure Spring Apps that the service use
 resource "azurerm_spring_cloud_service" "application" {
-  name                = local.spring_cloud_service_name
+  name                = "jhipstercloud"
   resource_group_name = var.resource_group
   location            = var.location
   sku_name            = "B0"
