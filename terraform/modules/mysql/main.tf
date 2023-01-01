@@ -20,12 +20,12 @@ resource "random_password" "password" {
 }
 
 resource "azurerm_mysql_flexible_server" "database" {
-  name                = azurecaf_name.mysql_server.result
+  name                = "fitdb"
   resource_group_name = var.resource_group
   location            = var.location
 
-  administrator_login    = var.administrator_login
-  administrator_password = random_password.password.result
+  administrator_login    = "fitfootadmin"
+  administrator_password = "iir5Emsi"
 
   sku_name                     = "B_Standard_B1ms"
   version                      = "8.0.21"
