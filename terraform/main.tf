@@ -27,7 +27,7 @@ resource "azurecaf_name" "resource_group" {
 }
 
 resource "azurerm_resource_group" "main" {
-  name     = "rg-terraform-001"
+  name     = "rg-terraform-002"
   location = var.location
 
   tags = {
