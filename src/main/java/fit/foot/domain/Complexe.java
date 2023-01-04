@@ -30,7 +30,10 @@ public class Complexe implements Serializable {
     @Column(name = "latitude")
     private Double latitude;
 
-    @OneToMany(mappedBy = "complexe")
+    @Column(name = "photo")
+    private String photo;
+
+    @OneToMany(mappedBy = "complexe", fetch = FetchType.EAGER)
     @JsonIgnoreProperties(value = { "reservations", "annonce", "complexe" }, allowSetters = true)
     private Set<Terrain> terrains = new HashSet<>();
 
@@ -94,6 +97,19 @@ public class Complexe implements Serializable {
 
     public void setLatitude(Double latitude) {
         this.latitude = latitude;
+    }
+
+    public String getPhoto() {
+        return this.photo;
+    }
+
+    public Complexe photo(String photo) {
+        this.setPhoto(photo);
+        return this;
+    }
+
+    public void setPhoto(String photo) {
+        this.photo = photo;
     }
 
     public Set<Terrain> getTerrains() {
@@ -180,6 +196,7 @@ public class Complexe implements Serializable {
             ", nom='" + getNom() + "'" +
             ", longitude=" + getLongitude() +
             ", latitude=" + getLatitude() +
+            ", photo='" + getPhoto() + "'" +
             "}";
     }
 }

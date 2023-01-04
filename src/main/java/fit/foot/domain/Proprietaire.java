@@ -42,7 +42,7 @@ public class Proprietaire implements Serializable {
     private User user;
 
     @OneToMany(mappedBy = "proprietaire")
-    @JsonIgnoreProperties(value = { "terrains", "quartier", "proprietaire" }, allowSetters = true)
+    @JsonIgnoreProperties(value = { "quartier", "proprietaire" }, allowSetters = true)
     private Set<Complexe> complexes = new HashSet<>();
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
