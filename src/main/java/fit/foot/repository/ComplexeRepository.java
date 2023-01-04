@@ -12,4 +12,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ComplexeRepository extends JpaRepository<Complexe, Long> {
     List<Complexe> findByNomIgnoreCaseIsContaining(String nom);
+
+    List<Complexe> findByProprietaireUserLogin(String login);
 }

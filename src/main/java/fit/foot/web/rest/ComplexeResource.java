@@ -2,6 +2,8 @@ package fit.foot.web.rest;
 
 import fit.foot.domain.Complexe;
 import fit.foot.repository.ComplexeRepository;
+import fit.foot.security.AuthoritiesConstants;
+import fit.foot.security.SecurityUtils;
 import fit.foot.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -12,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.HeaderUtil;
@@ -42,9 +46,12 @@ public class ComplexeResource {
      * {@code POST  /complexes} : Create a new complexe.
      *
      * @param complexe the complexe to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new complexe, or with status {@code 400 (Bad Request)} if the complexe has already an ID.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with
+     *         body the new complexe, or with status {@code 400 (Bad Request)} if
+     *         the complexe has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Secured({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.OWNER })
     @PostMapping("/complexes")
     public ResponseEntity<Complexe> createComplexe(@RequestBody Complexe complexe) throws URISyntaxException {
         log.debug("REST request to save Complexe : {}", complexe);
@@ -61,13 +68,17 @@ public class ComplexeResource {
     /**
      * {@code PUT  /complexes/:id} : Updates an existing complexe.
      *
-     * @param id the id of the complexe to save.
+     * @param id       the id of the complexe to save.
      * @param complexe the complexe to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated complexe,
-     * or with status {@code 400 (Bad Request)} if the complexe is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the complexe couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated complexe,
+     *         or with status {@code 400 (Bad Request)} if the complexe is not
+     *         valid,
+     *         or with status {@code 500 (Internal Server Error)} if the complexe
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @PreAuthorize("@complexeRepository.findById(#id).get().owner.user.login == authentication.principal.username or hasRole('ROLE_ADMIN')")
     @PutMapping("/complexes/{id}")
     public ResponseEntity<Complexe> updateComplexe(
         @PathVariable(value = "id", required = false) final Long id,
@@ -93,16 +104,21 @@ public class ComplexeResource {
     }
 
     /**
-     * {@code PATCH  /complexes/:id} : Partial updates given fields of an existing complexe, field will ignore if it is null
+     * {@code PATCH  /complexes/:id} : Partial updates given fields of an existing
+     * complexe, field will ignore if it is null
      *
-     * @param id the id of the complexe to save.
+     * @param id       the id of the complexe to save.
      * @param complexe the complexe to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated complexe,
-     * or with status {@code 400 (Bad Request)} if the complexe is not valid,
-     * or with status {@code 404 (Not Found)} if the complexe is not found,
-     * or with status {@code 500 (Internal Server Error)} if the complexe couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated complexe,
+     *         or with status {@code 400 (Bad Request)} if the complexe is not
+     *         valid,
+     *         or with status {@code 404 (Not Found)} if the complexe is not found,
+     *         or with status {@code 500 (Internal Server Error)} if the complexe
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @Secured({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.OWNER })
     @PatchMapping(value = "/complexes/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<Complexe> partialUpdateComplexe(
         @PathVariable(value = "id", required = false) final Long id,
@@ -146,7 +162,8 @@ public class ComplexeResource {
     /**
      * {@code GET  /complexes} : get all the complexes.
      *
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of complexes in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list
+     *         of complexes in body.
      */
     @GetMapping("/complexes")
     public List<Complexe> getAllComplexes() {
@@ -158,7 +175,8 @@ public class ComplexeResource {
      * {@code GET  /complexes/:id} : get the "id" complexe.
      *
      * @param id the id of the complexe to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the complexe, or with status {@code 404 (Not Found)}.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the complexe, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/complexes/{id}")
     public ResponseEntity<Complexe> getComplexe(@PathVariable Long id) {
@@ -171,6 +189,14 @@ public class ComplexeResource {
     public List<Complexe> getComplexe(@PathVariable String nomComplexe) {
         log.debug("REST request to get Complexe : {}", nomComplexe);
         return complexeRepository.findByNomIgnoreCaseIsContaining(nomComplexe);
+    }
+
+    @Secured({ AuthoritiesConstants.OWNER })
+    @GetMapping("/complexes/owner")
+    public List<Complexe> getComplexeByOwner() {
+        log.debug("REST request to get Complexe by owner");
+        //
+        return complexeRepository.findByProprietaireUserLogin(SecurityUtils.getCurrentUserLogin().get());
     }
 
     /**

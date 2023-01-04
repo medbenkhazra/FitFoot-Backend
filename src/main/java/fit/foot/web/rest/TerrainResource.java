@@ -1,6 +1,7 @@
 package fit.foot.web.rest;
 
 import fit.foot.domain.Terrain;
+import fit.foot.repository.ComplexeRepository;
 import fit.foot.repository.TerrainRepository;
 import fit.foot.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.HeaderUtil;
@@ -35,18 +37,27 @@ public class TerrainResource {
     private String applicationName;
 
     private final TerrainRepository terrainRepository;
+    private final ComplexeRepository complexeRepository;
 
-    public TerrainResource(TerrainRepository terrainRepository) {
+    public TerrainResource(TerrainRepository terrainRepository, ComplexeRepository complexeRepository) {
         this.terrainRepository = terrainRepository;
+        this.complexeRepository = complexeRepository;
     }
 
     /**
      * {@code POST  /terrains} : Create a new terrain.
      *
      * @param terrain the terrain to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new terrain, or with status {@code 400 (Bad Request)} if the terrain has already an ID.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with
+     *         body the new terrain, or with status {@code 400 (Bad Request)} if the
+     *         terrain has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    // only the owner of complexe can create a terrain, look for complexe first in
+    // complexerepository
+    @PreAuthorize(
+        "@complexeRepository.findById(#terrain.complexe.id).get().owner.user.login == authentication.principal.username or hasRole('ROLE_ADMIN')"
+    )
     @PostMapping("/terrains")
     public ResponseEntity<Terrain> createTerrain(@RequestBody Terrain terrain) throws URISyntaxException {
         log.debug("REST request to save Terrain : {}", terrain);
@@ -63,13 +74,18 @@ public class TerrainResource {
     /**
      * {@code PUT  /terrains/:id} : Updates an existing terrain.
      *
-     * @param id the id of the terrain to save.
+     * @param id      the id of the terrain to save.
      * @param terrain the terrain to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated terrain,
-     * or with status {@code 400 (Bad Request)} if the terrain is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the terrain couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated terrain,
+     *         or with status {@code 400 (Bad Request)} if the terrain is not valid,
+     *         or with status {@code 500 (Internal Server Error)} if the terrain
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @PreAuthorize(
+        "@terrainRepository.findById(#id).get().complexe.owner.user.login == authentication.principal.username or hasRole('ROLE_ADMIN')"
+    )
     @PutMapping("/terrains/{id}")
     public ResponseEntity<Terrain> updateTerrain(@PathVariable(value = "id", required = false) final Long id, @RequestBody Terrain terrain)
         throws URISyntaxException {
@@ -93,16 +109,22 @@ public class TerrainResource {
     }
 
     /**
-     * {@code PATCH  /terrains/:id} : Partial updates given fields of an existing terrain, field will ignore if it is null
+     * {@code PATCH  /terrains/:id} : Partial updates given fields of an existing
+     * terrain, field will ignore if it is null
      *
-     * @param id the id of the terrain to save.
+     * @param id      the id of the terrain to save.
      * @param terrain the terrain to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated terrain,
-     * or with status {@code 400 (Bad Request)} if the terrain is not valid,
-     * or with status {@code 404 (Not Found)} if the terrain is not found,
-     * or with status {@code 500 (Internal Server Error)} if the terrain couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated terrain,
+     *         or with status {@code 400 (Bad Request)} if the terrain is not valid,
+     *         or with status {@code 404 (Not Found)} if the terrain is not found,
+     *         or with status {@code 500 (Internal Server Error)} if the terrain
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    @PreAuthorize(
+        "@terrainRepository.findById(#id).get().complexe.owner.user.login == authentication.principal.username or hasRole('ROLE_ADMIN')"
+    )
     @PatchMapping(value = "/terrains/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<Terrain> partialUpdateTerrain(
         @PathVariable(value = "id", required = false) final Long id,
@@ -144,8 +166,10 @@ public class TerrainResource {
      * {@code GET  /terrains} : get all the terrains.
      *
      * @param filter the filter of the request.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of terrains in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list
+     *         of terrains in body.
      */
+
     @GetMapping("/terrains")
     public List<Terrain> getAllTerrains(@RequestParam(required = false) String filter) {
         if ("annonce-is-null".equals(filter)) {
@@ -163,7 +187,8 @@ public class TerrainResource {
      * {@code GET  /terrains/:id} : get the "id" terrain.
      *
      * @param id the id of the terrain to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the terrain, or with status {@code 404 (Not Found)}.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the terrain, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/terrains/{id}")
     public ResponseEntity<Terrain> getTerrain(@PathVariable Long id) {
@@ -178,6 +203,9 @@ public class TerrainResource {
      * @param id the id of the terrain to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
+    @PreAuthorize(
+        "@terrainRepository.findById(#id).get().complexe.owner.user.login == authentication.principal.username or hasRole('ROLE_ADMIN')"
+    )
     @DeleteMapping("/terrains/{id}")
     public ResponseEntity<Void> deleteTerrain(@PathVariable Long id) {
         log.debug("REST request to delete Terrain : {}", id);

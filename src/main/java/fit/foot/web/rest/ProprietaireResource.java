@@ -1,7 +1,11 @@
 package fit.foot.web.rest;
 
 import fit.foot.domain.Proprietaire;
+import fit.foot.domain.User;
 import fit.foot.repository.ProprietaireRepository;
+import fit.foot.service.UserService;
+import fit.foot.service.dto.AdminUserDTO;
+import fit.foot.service.dto.ProprietaireDTO;
 import fit.foot.web.rest.errors.BadRequestAlertException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -12,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.HeaderUtil;
@@ -34,24 +39,50 @@ public class ProprietaireResource {
 
     private final ProprietaireRepository proprietaireRepository;
 
-    public ProprietaireResource(ProprietaireRepository proprietaireRepository) {
+    private final UserService userService;
+
+    public ProprietaireResource(ProprietaireRepository proprietaireRepository, UserService userService) {
         this.proprietaireRepository = proprietaireRepository;
+        this.userService = userService;
     }
 
     /**
      * {@code POST  /proprietaires} : Create a new proprietaire.
      *
      * @param proprietaire the proprietaire to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new proprietaire, or with status {@code 400 (Bad Request)} if the proprietaire has already an ID.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with
+     *         body the new proprietaire, or with status {@code 400 (Bad Request)}
+     *         if the proprietaire has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    // @PostMapping("/proprietaires")
+    // public ResponseEntity<Proprietaire> createProprietaire(@RequestBody
+    // Proprietaire proprietaire) throws URISyntaxException {
+    // log.debug("REST request to save Proprietaire : {}", proprietaire);
+    // if (proprietaire.getId() != null) {
+    // throw new BadRequestAlertException("A new proprietaire cannot already have an
+    // ID", ENTITY_NAME, "idexists");
+    // }
+    // Proprietaire result = proprietaireRepository.save(proprietaire);
+    // return ResponseEntity
+    // .created(new URI("/api/proprietaires/" + result.getId()))
+    // .headers(HeaderUtil.createEntityCreationAlert(applicationName, true,
+    // ENTITY_NAME, result.getId().toString()))
+    // .body(result);
+    // }
+    @Secured({ "ROLE_ADMIN" })
     @PostMapping("/proprietaires")
-    public ResponseEntity<Proprietaire> createProprietaire(@RequestBody Proprietaire proprietaire) throws URISyntaxException {
+    public ResponseEntity<Proprietaire> createProprietaire(@RequestBody ProprietaireDTO proprietaire, String password)
+        throws URISyntaxException {
         log.debug("REST request to save Proprietaire : {}", proprietaire);
         if (proprietaire.getId() != null) {
             throw new BadRequestAlertException("A new proprietaire cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        Proprietaire result = proprietaireRepository.save(proprietaire);
+        AdminUserDTO ownerUserDTO = proprietaire.getUser();
+        User user = userService.registerOwner(ownerUserDTO, password);
+        Proprietaire owner = new Proprietaire();
+        owner.cin(proprietaire.getCin()).rib(proprietaire.getRib()).user(user).numTel(proprietaire.getNumTel());
+        Proprietaire result = proprietaireRepository.save(owner);
         return ResponseEntity
             .created(new URI("/api/proprietaires/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
@@ -61,11 +92,14 @@ public class ProprietaireResource {
     /**
      * {@code PUT  /proprietaires/:id} : Updates an existing proprietaire.
      *
-     * @param id the id of the proprietaire to save.
+     * @param id           the id of the proprietaire to save.
      * @param proprietaire the proprietaire to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated proprietaire,
-     * or with status {@code 400 (Bad Request)} if the proprietaire is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the proprietaire couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated proprietaire,
+     *         or with status {@code 400 (Bad Request)} if the proprietaire is not
+     *         valid,
+     *         or with status {@code 500 (Internal Server Error)} if the
+     *         proprietaire couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/proprietaires/{id}")
@@ -93,14 +127,19 @@ public class ProprietaireResource {
     }
 
     /**
-     * {@code PATCH  /proprietaires/:id} : Partial updates given fields of an existing proprietaire, field will ignore if it is null
+     * {@code PATCH  /proprietaires/:id} : Partial updates given fields of an
+     * existing proprietaire, field will ignore if it is null
      *
-     * @param id the id of the proprietaire to save.
+     * @param id           the id of the proprietaire to save.
      * @param proprietaire the proprietaire to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated proprietaire,
-     * or with status {@code 400 (Bad Request)} if the proprietaire is not valid,
-     * or with status {@code 404 (Not Found)} if the proprietaire is not found,
-     * or with status {@code 500 (Internal Server Error)} if the proprietaire couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated proprietaire,
+     *         or with status {@code 400 (Bad Request)} if the proprietaire is not
+     *         valid,
+     *         or with status {@code 404 (Not Found)} if the proprietaire is not
+     *         found,
+     *         or with status {@code 500 (Internal Server Error)} if the
+     *         proprietaire couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/proprietaires/{id}", consumes = { "application/json", "application/merge-patch+json" })
@@ -152,7 +191,8 @@ public class ProprietaireResource {
     /**
      * {@code GET  /proprietaires} : get all the proprietaires.
      *
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of proprietaires in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list
+     *         of proprietaires in body.
      */
     @GetMapping("/proprietaires")
     public List<Proprietaire> getAllProprietaires() {
@@ -164,7 +204,8 @@ public class ProprietaireResource {
      * {@code GET  /proprietaires/:id} : get the "id" proprietaire.
      *
      * @param id the id of the proprietaire to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the proprietaire, or with status {@code 404 (Not Found)}.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the proprietaire, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/proprietaires/{id}")
     public ResponseEntity<Proprietaire> getProprietaire(@PathVariable Long id) {
