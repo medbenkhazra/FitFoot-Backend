@@ -1,6 +1,7 @@
 package fit.foot.repository;
 
 import fit.foot.domain.Complexe;
+import java.util.List;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 
@@ -9,4 +10,6 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface ComplexeRepository extends JpaRepository<Complexe, Long> {}
+public interface ComplexeRepository extends JpaRepository<Complexe, Long> {
+    List<Complexe> findByNomIgnoreCaseIsContaining(String nom);
+}

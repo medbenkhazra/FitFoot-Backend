@@ -167,6 +167,12 @@ public class ComplexeResource {
         return ResponseUtil.wrapOrNotFound(complexe);
     }
 
+    @GetMapping("/complexes/nomComplexe/{nomComplexe}")
+    public List<Complexe> getComplexe(@PathVariable String nomComplexe) {
+        log.debug("REST request to get Complexe : {}", nomComplexe);
+        return complexeRepository.findByNomIgnoreCaseIsContaining(nomComplexe);
+    }
+
     /**
      * {@code DELETE  /complexes/:id} : delete the "id" complexe.
      *
