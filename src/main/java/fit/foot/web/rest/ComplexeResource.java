@@ -2,6 +2,7 @@ package fit.foot.web.rest;
 
 import fit.foot.domain.Complexe;
 import fit.foot.repository.ComplexeRepository;
+import fit.foot.repository.ProprietaireRepository;
 import fit.foot.security.AuthoritiesConstants;
 import fit.foot.security.SecurityUtils;
 import fit.foot.web.rest.errors.BadRequestAlertException;
@@ -37,9 +38,11 @@ public class ComplexeResource {
     private String applicationName;
 
     private final ComplexeRepository complexeRepository;
+    private final ProprietaireRepository proprietaireRepository;
 
-    public ComplexeResource(ComplexeRepository complexeRepository) {
+    public ComplexeResource(ComplexeRepository complexeRepository, ProprietaireRepository proprietaireRepository) {
         this.complexeRepository = complexeRepository;
+        this.proprietaireRepository = proprietaireRepository;
     }
 
     /**
@@ -57,6 +60,9 @@ public class ComplexeResource {
         log.debug("REST request to save Complexe : {}", complexe);
         if (complexe.getId() != null) {
             throw new BadRequestAlertException("A new complexe cannot already have an ID", ENTITY_NAME, "idexists");
+        }
+        if (!SecurityUtils.hasCurrentUserAnyOfAuthorities(AuthoritiesConstants.OWNER)) {
+            complexe.setProprietaire(proprietaireRepository.findOneByUserLogin(SecurityUtils.getCurrentUserLogin().get()).get());
         }
         Complexe result = complexeRepository.save(complexe);
         return ResponseEntity
@@ -78,7 +84,9 @@ public class ComplexeResource {
      *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PreAuthorize("@complexeRepository.findById(#id).get().owner.user.login == authentication.principal.username or hasRole('ROLE_ADMIN')")
+    @PreAuthorize(
+        "@complexeRepository.findById(#id).get().getProprietaire().getUser().login.equals(principal.username) or hasRole('ROLE_ADMIN')"
+    )
     @PutMapping("/complexes/{id}")
     public ResponseEntity<Complexe> updateComplexe(
         @PathVariable(value = "id", required = false) final Long id,
@@ -118,7 +126,9 @@ public class ComplexeResource {
      *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @Secured({ AuthoritiesConstants.ADMIN, AuthoritiesConstants.OWNER })
+    @PreAuthorize(
+        "@complexeRepository.findById(#id).get().getProprietaire().getUser().login.equals(principal.username) or hasRole('ROLE_ADMIN')"
+    )
     @PatchMapping(value = "/complexes/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<Complexe> partialUpdateComplexe(
         @PathVariable(value = "id", required = false) final Long id,
@@ -205,6 +215,9 @@ public class ComplexeResource {
      * @param id the id of the complexe to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
+    @PreAuthorize(
+        "@complexeRepository.findById(#id).get().getProprietaire().getUser().login.equals(principal.username) or hasRole('ROLE_ADMIN')"
+    )
     @DeleteMapping("/complexes/{id}")
     public ResponseEntity<Void> deleteComplexe(@PathVariable Long id) {
         log.debug("REST request to delete Complexe : {}", id);

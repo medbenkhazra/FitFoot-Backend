@@ -1,6 +1,7 @@
 package fit.foot.repository;
 
 import fit.foot.domain.Proprietaire;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 
@@ -9,4 +10,6 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface ProprietaireRepository extends JpaRepository<Proprietaire, Long> {}
+public interface ProprietaireRepository extends JpaRepository<Proprietaire, Long> {
+    Optional<Proprietaire> findOneByUserLogin(String login);
+}

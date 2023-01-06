@@ -56,7 +56,7 @@ public class TerrainResource {
     // only the owner of complexe can create a terrain, look for complexe first in
     // complexerepository
     @PreAuthorize(
-        "@complexeRepository.findById(#terrain.complexe.id).get().owner.user.login == authentication.principal.username or hasRole('ROLE_ADMIN')"
+        "@terrainRepository.findById(#id).get().getComplexe().getProprietaire().getUser().login.equals(principal.username) or hasRole('ROLE_ADMIN')"
     )
     @PostMapping("/terrains")
     public ResponseEntity<Terrain> createTerrain(@RequestBody Terrain terrain) throws URISyntaxException {
@@ -84,7 +84,7 @@ public class TerrainResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PreAuthorize(
-        "@terrainRepository.findById(#id).get().complexe.owner.user.login == authentication.principal.username or hasRole('ROLE_ADMIN')"
+        "@terrainRepository.findById(#id).get().getComplexe().getProprietaire().getUser().login.equals(principal.username) or hasRole('ROLE_ADMIN')"
     )
     @PutMapping("/terrains/{id}")
     public ResponseEntity<Terrain> updateTerrain(@PathVariable(value = "id", required = false) final Long id, @RequestBody Terrain terrain)
@@ -123,7 +123,7 @@ public class TerrainResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PreAuthorize(
-        "@terrainRepository.findById(#id).get().complexe.owner.user.login == authentication.principal.username or hasRole('ROLE_ADMIN')"
+        "@terrainRepository.findById(#id).get().getComplexe().getProprietaire().getUser().login.equals(principal.username) or hasRole('ROLE_ADMIN')"
     )
     @PatchMapping(value = "/terrains/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<Terrain> partialUpdateTerrain(
@@ -204,7 +204,7 @@ public class TerrainResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @PreAuthorize(
-        "@terrainRepository.findById(#id).get().complexe.owner.user.login == authentication.principal.username or hasRole('ROLE_ADMIN')"
+        "@terrainRepository.findById(#id).get().getComplexe().getProprietaire().getUser().login.equals(principal.username) or hasRole('ROLE_ADMIN')"
     )
     @DeleteMapping("/terrains/{id}")
     public ResponseEntity<Void> deleteTerrain(@PathVariable Long id) {
