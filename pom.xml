@@ -962,10 +962,14 @@
                                 <changeLogFile>${project.basedir}/src/main/resources/config/liquibase/master.xml</changeLogFile>
                                 <diffChangeLogFile>${project.basedir}/src/main/resources/config/liquibase/changelog/${maven.build.timestamp}_changelog.xml</diffChangeLogFile>
                                 <driver>com.mysql.cj.jdbc.Driver</driver>
-                                <url>jdbc:mysql://localhost:3306/FitFoot</url>
+                                <url>jdbc:mysql://containers-us-west-138.railway.app:7295/railway?serverTimezone=UTC</url>
+                                <defaultSchemaName>railway</defaultSchemaName>
+                                <username>root</username>
+                                <password>a392TCmvhVHrB1SfwPIc</password>
+                                <!-- <url>jdbc:mysql://localhost:3306/FitFoot</url>
                                 <defaultSchemaName>FitFoot</defaultSchemaName>
                                 <username>jyupiter</username>
-                                <password>15935789</password>
+                                <password>15935789</password> -->
                                 <referenceUrl>hibernate:spring:fit.foot.domain?dialect=org.hibernate.dialect.MySQL8Dialect&amp;hibernate.physical_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy&amp;hibernate.implicit_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy</referenceUrl>
                                 <verbose>true</verbose>
                                 <logging>debug</logging>
@@ -1057,10 +1061,10 @@
                                 <changeLogFile>${project.basedir}/src/main/resources/config/liquibase/master.xml</changeLogFile>
                                 <diffChangeLogFile>${project.basedir}/src/main/resources/config/liquibase/changelog/${maven.build.timestamp}_changelog.xml</diffChangeLogFile>
                                 <driver>com.mysql.cj.jdbc.Driver</driver>
-                                <url>jdbc:mysql://root:gUhdqt8ECu9HttBkAftk@containers-us-west-64.railway.app:6126/railway?serverTimezone=UTC</url>
+                                <url>jdbc:mysql://containers-us-west-138.railway.app:7295/railway?serverTimezone=UTC</url>
                                 <defaultSchemaName>railway</defaultSchemaName>
                                 <username>root</username>
-                                <password>gUhdqt8ECu9HttBkAftk</password>
+                                <password>a392TCmvhVHrB1SfwPIc</password>
                                 <referenceUrl>hibernate:spring:fit.foot.domain?dialect=org.hibernate.dialect.MySQL8Dialect&amp;hibernate.physical_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy&amp;hibernate.implicit_naming_strategy=org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy</referenceUrl>
                                 <verbose>true</verbose>
                                 <logging>debug</logging>
